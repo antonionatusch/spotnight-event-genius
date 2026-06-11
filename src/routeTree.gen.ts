@@ -18,6 +18,7 @@ import { Route as ReserveEventIdRouteImport } from './routes/reserve.$eventId'
 import { Route as ReservationIdRouteImport } from './routes/reservation.$id'
 import { Route as OwnerDashboardRouteImport } from './routes/owner.dashboard'
 import { Route as EventIdRouteImport } from './routes/event.$id'
+import { Route as OwnerEventsNewRouteImport } from './routes/owner.events.new'
 
 const MyReservationsRoute = MyReservationsRouteImport.update({
   id: '/my-reservations',
@@ -64,6 +65,11 @@ const EventIdRoute = EventIdRouteImport.update({
   path: '/event/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OwnerEventsNewRoute = OwnerEventsNewRouteImport.update({
+  id: '/owner/events/new',
+  path: '/owner/events/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/reserve/$eventId': typeof ReserveEventIdRoute
   '/select-table/$eventId': typeof SelectTableEventIdRoute
   '/staff/check-in': typeof StaffCheckInRoute
+  '/owner/events/new': typeof OwnerEventsNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByTo {
   '/reserve/$eventId': typeof ReserveEventIdRoute
   '/select-table/$eventId': typeof SelectTableEventIdRoute
   '/staff/check-in': typeof StaffCheckInRoute
+  '/owner/events/new': typeof OwnerEventsNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   '/reserve/$eventId': typeof ReserveEventIdRoute
   '/select-table/$eventId': typeof SelectTableEventIdRoute
   '/staff/check-in': typeof StaffCheckInRoute
+  '/owner/events/new': typeof OwnerEventsNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
     | '/reserve/$eventId'
     | '/select-table/$eventId'
     | '/staff/check-in'
+    | '/owner/events/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/reserve/$eventId'
     | '/select-table/$eventId'
     | '/staff/check-in'
+    | '/owner/events/new'
   id:
     | '__root__'
     | '/'
@@ -133,6 +144,7 @@ export interface FileRouteTypes {
     | '/reserve/$eventId'
     | '/select-table/$eventId'
     | '/staff/check-in'
+    | '/owner/events/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,6 +157,7 @@ export interface RootRouteChildren {
   ReserveEventIdRoute: typeof ReserveEventIdRoute
   SelectTableEventIdRoute: typeof SelectTableEventIdRoute
   StaffCheckInRoute: typeof StaffCheckInRoute
+  OwnerEventsNewRoute: typeof OwnerEventsNewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -212,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/owner/events/new': {
+      id: '/owner/events/new'
+      path: '/owner/events/new'
+      fullPath: '/owner/events/new'
+      preLoaderRoute: typeof OwnerEventsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -225,6 +245,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReserveEventIdRoute: ReserveEventIdRoute,
   SelectTableEventIdRoute: SelectTableEventIdRoute,
   StaffCheckInRoute: StaffCheckInRoute,
+  OwnerEventsNewRoute: OwnerEventsNewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

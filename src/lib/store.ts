@@ -162,17 +162,17 @@ const venueMap: VenueMapItem[] = [
   { id: "PB-M03", label: "M03", floor: "planta_baja", type: "table", zone: "General", x: 70, y: 290, width: 50, height: 36, capacity: 4, price: 250, status: "available" },
   { id: "PB-M04", label: "M04", floor: "planta_baja", type: "table", zone: "General", x: 70, y: 380, width: 50, height: 36, capacity: 4, price: 250, status: "occupied" },
 
-  // Mesas centro (pista)
-  { id: "PB-M05", label: "M05", floor: "planta_baja", type: "table", zone: "General", x: 175, y: 310, radius: 22, capacity: 4, price: 280, status: "available" },
-  { id: "PB-M06", label: "M06", floor: "planta_baja", type: "table", zone: "General", x: 175, y: 400, radius: 22, capacity: 4, price: 280, status: "available" },
-  { id: "PB-M07", label: "M07", floor: "planta_baja", type: "table", zone: "General", x: 265, y: 310, radius: 22, capacity: 4, price: 280, status: "reserved" },
-  { id: "PB-M08", label: "M08", floor: "planta_baja", type: "table", zone: "General", x: 265, y: 400, radius: 22, capacity: 4, price: 280, status: "available" },
+  // Mesas centro (alrededor de la pista, sin pisarla)
+  { id: "PB-M05", label: "M05", floor: "planta_baja", type: "table", zone: "General", x: 155, y: 140, radius: 22, capacity: 4, price: 280, status: "available" },
+  { id: "PB-M06", label: "M06", floor: "planta_baja", type: "table", zone: "General", x: 175, y: 405, radius: 22, capacity: 4, price: 280, status: "available" },
+  { id: "PB-M07", label: "M07", floor: "planta_baja", type: "table", zone: "General", x: 245, y: 140, radius: 22, capacity: 4, price: 280, status: "reserved" },
+  { id: "PB-M08", label: "M08", floor: "planta_baja", type: "table", zone: "General", x: 265, y: 405, radius: 22, capacity: 4, price: 280, status: "available" },
 
-  // Mesas barra derecha
-  { id: "PB-M09", label: "M09", floor: "planta_baja", type: "seat", zone: "Barra", x: 370, y: 220, width: 36, height: 32, capacity: 2, price: 180, status: "available" },
-  { id: "PB-M10", label: "M10", floor: "planta_baja", type: "seat", zone: "Barra", x: 370, y: 265, width: 36, height: 32, capacity: 2, price: 180, status: "occupied" },
-  { id: "PB-M11", label: "M11", floor: "planta_baja", type: "seat", zone: "General", x: 370, y: 360, width: 36, height: 32, capacity: 2, price: 180, status: "available" },
-  { id: "PB-M12", label: "M12", floor: "planta_baja", type: "seat", zone: "General", x: 370, y: 405, width: 36, height: 32, capacity: 2, price: 180, status: "reserved" },
+  // Mesas junto a la barra (no encima)
+  { id: "PB-M09", label: "M09", floor: "planta_baja", type: "seat", zone: "Barra", x: 315, y: 160, width: 36, height: 32, capacity: 2, price: 180, status: "available" },
+  { id: "PB-M10", label: "M10", floor: "planta_baja", type: "seat", zone: "Barra", x: 315, y: 210, width: 36, height: 32, capacity: 2, price: 180, status: "occupied" },
+  { id: "PB-M11", label: "M11", floor: "planta_baja", type: "seat", zone: "General", x: 370, y: 350, width: 36, height: 32, capacity: 2, price: 180, status: "available" },
+  { id: "PB-M12", label: "M12", floor: "planta_baja", type: "seat", zone: "General", x: 370, y: 400, width: 36, height: 32, capacity: 2, price: 180, status: "reserved" },
 
   // ===== Planta Alta (VIP) =====
   { id: "PA-TIT", label: "✦ PLANTA VIP ✦", floor: "planta_alta", type: "area", zone: "VIP", x: 200, y: 50, width: 220, height: 30 },

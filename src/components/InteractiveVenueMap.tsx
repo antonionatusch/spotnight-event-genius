@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useStore, type Floor, type VenueMapItem } from "@/lib/store";
 
 type Props = {
@@ -11,7 +12,8 @@ const W = 460;
 const H = 560;
 
 export function InteractiveVenueMap({ floor, selectedId, onSelect, filterTypes }: Props) {
-  const items = useStore((s) => s.venueMap.filter((i) => i.floor === floor));
+  const venueMap = useStore((s) => s.venueMap);
+  const items = useMemo(() => venueMap.filter((i) => i.floor === floor), [venueMap, floor]);
   const isVip = floor === "planta_alta";
 
   const frameStroke = isVip ? "oklch(0.82 0.15 85)" : "oklch(0.78 0.18 220 / 0.7)";

@@ -31,7 +31,7 @@ function ReservationPage() {
             </div>
             <div className="flex justify-center">
               <div className="rounded-2xl bg-white p-3">
-                <QRCodeSVG value={JSON.stringify({ code: r.code, event: r.eventName })} size={200} />
+                <QRCodeSVG value={JSON.stringify({ code: r.code, eventId: r.eventId, event: r.eventName, ticketType: r.ticketType, itemId: r.venueMapItemId ?? null, item: r.venueMapItemLabel ?? null, floor: r.floor ?? null, zone: r.zone ?? null })} size={200} />
               </div>
             </div>
             <p className="text-center text-xs text-muted-foreground">Válido por un ingreso</p>

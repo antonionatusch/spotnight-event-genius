@@ -249,7 +249,14 @@ export const useStore = create<Store>((set, get) => ({
       venueMap: s.venueMap.map((i) => (i.id === itemId ? { ...i, status: "reserved" } : i)),
     })),
   checkIn: (rawCode) => {
-    const code = rawCode.trim().toUpperCase();
+    let input = rawCode.trim();
+    try {
+      const parsed = JSON.parse(input);
+      if (parsed && typeof parsed.code === "string") input = parsed.code;
+    } catch {
+      // not JSON, use raw code
+    }
+    const code = input.toUpperCase();
     const reservation = get().reservations.find((r) => r.code.toUpperCase() === code);
     if (!reservation) return { ok: false, message: "Código inválido" };
     if (reservation.status === "Ingresó") return { ok: false, message: "Reserva ya utilizada", reservation };

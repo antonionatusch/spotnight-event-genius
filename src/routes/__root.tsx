@@ -11,6 +11,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { BottomNav } from "../components/BottomNav";
+import { Toaster } from "sonner";
 
 function NotFoundComponent() {
   return (
@@ -77,14 +79,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "SpotNight — Reservá tu noche" },
+      { name: "description", content: "Plataforma de reservas para boliches y eventos nocturnos." },
+      { name: "author", content: "SpotNight" },
+      { property: "og:title", content: "SpotNight — Reservá tu noche" },
+      { property: "og:description", content: "Explorá eventos, reservá mesas y VIP, validá tu ingreso con QR." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:site", content: "@SpotNight" },
     ],
     links: [
       {
@@ -118,8 +120,11 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <div className="mx-auto min-h-screen max-w-md pb-24">
+        <Outlet />
+      </div>
+      <BottomNav />
+      <Toaster theme="dark" position="top-center" richColors />
     </QueryClientProvider>
   );
 }

@@ -9,38 +9,207 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MyReservationsRouteImport } from './routes/my-reservations'
+import { Route as MyQrRouteImport } from './routes/my-qr'
+import { Route as MapRouteImport } from './routes/map'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as StaffCheckInRouteImport } from './routes/staff.check-in'
+import { Route as SelectTableEventIdRouteImport } from './routes/select-table.$eventId'
+import { Route as ReserveEventIdRouteImport } from './routes/reserve.$eventId'
+import { Route as ReservationIdRouteImport } from './routes/reservation.$id'
+import { Route as OwnerDashboardRouteImport } from './routes/owner.dashboard'
+import { Route as EventIdRouteImport } from './routes/event.$id'
+import { Route as OwnerEventsNewRouteImport } from './routes/owner.events.new'
+import { Route as OwnerEventsIdReservationsRouteImport } from './routes/owner.events.$id.reservations'
 
+const MyReservationsRoute = MyReservationsRouteImport.update({
+  id: '/my-reservations',
+  path: '/my-reservations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyQrRoute = MyQrRouteImport.update({
+  id: '/my-qr',
+  path: '/my-qr',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MapRoute = MapRouteImport.update({
+  id: '/map',
+  path: '/map',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StaffCheckInRoute = StaffCheckInRouteImport.update({
+  id: '/staff/check-in',
+  path: '/staff/check-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SelectTableEventIdRoute = SelectTableEventIdRouteImport.update({
+  id: '/select-table/$eventId',
+  path: '/select-table/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReserveEventIdRoute = ReserveEventIdRouteImport.update({
+  id: '/reserve/$eventId',
+  path: '/reserve/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReservationIdRoute = ReservationIdRouteImport.update({
+  id: '/reservation/$id',
+  path: '/reservation/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OwnerDashboardRoute = OwnerDashboardRouteImport.update({
+  id: '/owner/dashboard',
+  path: '/owner/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventIdRoute = EventIdRouteImport.update({
+  id: '/event/$id',
+  path: '/event/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OwnerEventsNewRoute = OwnerEventsNewRouteImport.update({
+  id: '/owner/events/new',
+  path: '/owner/events/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OwnerEventsIdReservationsRoute =
+  OwnerEventsIdReservationsRouteImport.update({
+    id: '/owner/events/$id/reservations',
+    path: '/owner/events/$id/reservations',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/map': typeof MapRoute
+  '/my-qr': typeof MyQrRoute
+  '/my-reservations': typeof MyReservationsRoute
+  '/event/$id': typeof EventIdRoute
+  '/owner/dashboard': typeof OwnerDashboardRoute
+  '/reservation/$id': typeof ReservationIdRoute
+  '/reserve/$eventId': typeof ReserveEventIdRoute
+  '/select-table/$eventId': typeof SelectTableEventIdRoute
+  '/staff/check-in': typeof StaffCheckInRoute
+  '/owner/events/new': typeof OwnerEventsNewRoute
+  '/owner/events/$id/reservations': typeof OwnerEventsIdReservationsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/map': typeof MapRoute
+  '/my-qr': typeof MyQrRoute
+  '/my-reservations': typeof MyReservationsRoute
+  '/event/$id': typeof EventIdRoute
+  '/owner/dashboard': typeof OwnerDashboardRoute
+  '/reservation/$id': typeof ReservationIdRoute
+  '/reserve/$eventId': typeof ReserveEventIdRoute
+  '/select-table/$eventId': typeof SelectTableEventIdRoute
+  '/staff/check-in': typeof StaffCheckInRoute
+  '/owner/events/new': typeof OwnerEventsNewRoute
+  '/owner/events/$id/reservations': typeof OwnerEventsIdReservationsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/map': typeof MapRoute
+  '/my-qr': typeof MyQrRoute
+  '/my-reservations': typeof MyReservationsRoute
+  '/event/$id': typeof EventIdRoute
+  '/owner/dashboard': typeof OwnerDashboardRoute
+  '/reservation/$id': typeof ReservationIdRoute
+  '/reserve/$eventId': typeof ReserveEventIdRoute
+  '/select-table/$eventId': typeof SelectTableEventIdRoute
+  '/staff/check-in': typeof StaffCheckInRoute
+  '/owner/events/new': typeof OwnerEventsNewRoute
+  '/owner/events/$id/reservations': typeof OwnerEventsIdReservationsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/map'
+    | '/my-qr'
+    | '/my-reservations'
+    | '/event/$id'
+    | '/owner/dashboard'
+    | '/reservation/$id'
+    | '/reserve/$eventId'
+    | '/select-table/$eventId'
+    | '/staff/check-in'
+    | '/owner/events/new'
+    | '/owner/events/$id/reservations'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/map'
+    | '/my-qr'
+    | '/my-reservations'
+    | '/event/$id'
+    | '/owner/dashboard'
+    | '/reservation/$id'
+    | '/reserve/$eventId'
+    | '/select-table/$eventId'
+    | '/staff/check-in'
+    | '/owner/events/new'
+    | '/owner/events/$id/reservations'
+  id:
+    | '__root__'
+    | '/'
+    | '/map'
+    | '/my-qr'
+    | '/my-reservations'
+    | '/event/$id'
+    | '/owner/dashboard'
+    | '/reservation/$id'
+    | '/reserve/$eventId'
+    | '/select-table/$eventId'
+    | '/staff/check-in'
+    | '/owner/events/new'
+    | '/owner/events/$id/reservations'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  MapRoute: typeof MapRoute
+  MyQrRoute: typeof MyQrRoute
+  MyReservationsRoute: typeof MyReservationsRoute
+  EventIdRoute: typeof EventIdRoute
+  OwnerDashboardRoute: typeof OwnerDashboardRoute
+  ReservationIdRoute: typeof ReservationIdRoute
+  ReserveEventIdRoute: typeof ReserveEventIdRoute
+  SelectTableEventIdRoute: typeof SelectTableEventIdRoute
+  StaffCheckInRoute: typeof StaffCheckInRoute
+  OwnerEventsNewRoute: typeof OwnerEventsNewRoute
+  OwnerEventsIdReservationsRoute: typeof OwnerEventsIdReservationsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/my-reservations': {
+      id: '/my-reservations'
+      path: '/my-reservations'
+      fullPath: '/my-reservations'
+      preLoaderRoute: typeof MyReservationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-qr': {
+      id: '/my-qr'
+      path: '/my-qr'
+      fullPath: '/my-qr'
+      preLoaderRoute: typeof MyQrRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/map': {
+      id: '/map'
+      path: '/map'
+      fullPath: '/map'
+      preLoaderRoute: typeof MapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +217,78 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/staff/check-in': {
+      id: '/staff/check-in'
+      path: '/staff/check-in'
+      fullPath: '/staff/check-in'
+      preLoaderRoute: typeof StaffCheckInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/select-table/$eventId': {
+      id: '/select-table/$eventId'
+      path: '/select-table/$eventId'
+      fullPath: '/select-table/$eventId'
+      preLoaderRoute: typeof SelectTableEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reserve/$eventId': {
+      id: '/reserve/$eventId'
+      path: '/reserve/$eventId'
+      fullPath: '/reserve/$eventId'
+      preLoaderRoute: typeof ReserveEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reservation/$id': {
+      id: '/reservation/$id'
+      path: '/reservation/$id'
+      fullPath: '/reservation/$id'
+      preLoaderRoute: typeof ReservationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/owner/dashboard': {
+      id: '/owner/dashboard'
+      path: '/owner/dashboard'
+      fullPath: '/owner/dashboard'
+      preLoaderRoute: typeof OwnerDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/event/$id': {
+      id: '/event/$id'
+      path: '/event/$id'
+      fullPath: '/event/$id'
+      preLoaderRoute: typeof EventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/owner/events/new': {
+      id: '/owner/events/new'
+      path: '/owner/events/new'
+      fullPath: '/owner/events/new'
+      preLoaderRoute: typeof OwnerEventsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/owner/events/$id/reservations': {
+      id: '/owner/events/$id/reservations'
+      path: '/owner/events/$id/reservations'
+      fullPath: '/owner/events/$id/reservations'
+      preLoaderRoute: typeof OwnerEventsIdReservationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  MapRoute: MapRoute,
+  MyQrRoute: MyQrRoute,
+  MyReservationsRoute: MyReservationsRoute,
+  EventIdRoute: EventIdRoute,
+  OwnerDashboardRoute: OwnerDashboardRoute,
+  ReservationIdRoute: ReservationIdRoute,
+  ReserveEventIdRoute: ReserveEventIdRoute,
+  SelectTableEventIdRoute: SelectTableEventIdRoute,
+  StaffCheckInRoute: StaffCheckInRoute,
+  OwnerEventsNewRoute: OwnerEventsNewRoute,
+  OwnerEventsIdReservationsRoute: OwnerEventsIdReservationsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

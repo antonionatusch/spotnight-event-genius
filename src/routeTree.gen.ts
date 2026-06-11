@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MyReservationsRouteImport } from './routes/my-reservations'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SelectTableEventIdRouteImport } from './routes/select-table.$eventId'
 import { Route as ReserveEventIdRouteImport } from './routes/reserve.$eventId'
 import { Route as ReservationIdRouteImport } from './routes/reservation.$id'
 import { Route as EventIdRouteImport } from './routes/event.$id'
 
+const MyReservationsRoute = MyReservationsRouteImport.update({
+  id: '/my-reservations',
+  path: '/my-reservations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -43,6 +49,7 @@ const EventIdRoute = EventIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/my-reservations': typeof MyReservationsRoute
   '/event/$id': typeof EventIdRoute
   '/reservation/$id': typeof ReservationIdRoute
   '/reserve/$eventId': typeof ReserveEventIdRoute
@@ -50,6 +57,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/my-reservations': typeof MyReservationsRoute
   '/event/$id': typeof EventIdRoute
   '/reservation/$id': typeof ReservationIdRoute
   '/reserve/$eventId': typeof ReserveEventIdRoute
@@ -58,6 +66,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/my-reservations': typeof MyReservationsRoute
   '/event/$id': typeof EventIdRoute
   '/reservation/$id': typeof ReservationIdRoute
   '/reserve/$eventId': typeof ReserveEventIdRoute
@@ -67,6 +76,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/my-reservations'
     | '/event/$id'
     | '/reservation/$id'
     | '/reserve/$eventId'
@@ -74,6 +84,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/my-reservations'
     | '/event/$id'
     | '/reservation/$id'
     | '/reserve/$eventId'
@@ -81,6 +92,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/my-reservations'
     | '/event/$id'
     | '/reservation/$id'
     | '/reserve/$eventId'
@@ -89,6 +101,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  MyReservationsRoute: typeof MyReservationsRoute
   EventIdRoute: typeof EventIdRoute
   ReservationIdRoute: typeof ReservationIdRoute
   ReserveEventIdRoute: typeof ReserveEventIdRoute
@@ -97,6 +110,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/my-reservations': {
+      id: '/my-reservations'
+      path: '/my-reservations'
+      fullPath: '/my-reservations'
+      preLoaderRoute: typeof MyReservationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -137,6 +157,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  MyReservationsRoute: MyReservationsRoute,
   EventIdRoute: EventIdRoute,
   ReservationIdRoute: ReservationIdRoute,
   ReserveEventIdRoute: ReserveEventIdRoute,

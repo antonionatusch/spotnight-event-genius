@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate, useParams, useSearch, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, Calendar, Clock, MapPin, User, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, MapPin, User, CheckCircle2, MapPinned, Layers, Tag } from "lucide-react";
 import { useStore, type TicketKind } from "@/lib/store";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 type Search = { ticket?: TicketKind; itemId?: string };
 

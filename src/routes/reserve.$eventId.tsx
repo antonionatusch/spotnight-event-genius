@@ -125,7 +125,7 @@ function Reserve() {
       </div>
 
       <button
-        onClick={onConfirm}
+        onClick={() => setConfirmOpen(true)}
         className="flex w-full items-center justify-center gap-2 rounded-2xl gradient-primary py-4 text-base font-bold text-white glow-primary"
       >
         <CheckCircle2 className="h-5 w-5" /> Confirmar reserva
@@ -133,6 +133,72 @@ function Reserve() {
       <p className="text-center text-[11px] text-muted-foreground">
         Al confirmar aceptás los términos y condiciones de SpotNight
       </p>
+
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="max-w-[92vw] rounded-2xl border-primary/40 bg-card sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-gradient text-xl">Confirmá tu reserva</DialogTitle>
+            <DialogDescription>
+              Revisá la ubicación seleccionada antes de generar tu QR.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div className="rounded-xl border border-border bg-background/40 p-3">
+              <p className="text-sm font-bold">{event.name}</p>
+              <p className="text-[11px] text-muted-foreground">{event.venueName} · {event.date} · {event.startTime} hs</p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2">
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-background/40 p-3">
+                <Layers className="h-4 w-4 text-primary" />
+                <div className="flex-1">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Planta</p>
+                  <p className="text-sm font-bold">{floorLabel}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-background/40 p-3">
+                <Tag className="h-4 w-4 text-gold" />
+                <div className="flex-1">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Zona</p>
+                  <p className="text-sm font-bold">{item ? `Zona ${item.zone}` : ticket}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-xl border border-magenta/40 bg-magenta/10 p-3">
+                <MapPinned className="h-4 w-4 text-magenta" />
+                <div className="flex-1">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Mesa / Ubicación</p>
+                  <p className="text-base font-bold text-magenta">{item?.label ?? "Sin asignar"}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between rounded-xl border border-border bg-background/40 px-3 py-2.5">
+              <span className="text-xs text-muted-foreground">Titular</span>
+              <span className="text-sm font-semibold">{name}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-xl border border-border bg-background/40 px-3 py-2.5">
+              <span className="text-xs text-muted-foreground">Total</span>
+              <span className="text-base font-bold text-success">Bs. {total}</span>
+            </div>
+          </div>
+
+          <DialogFooter className="flex-col gap-2 sm:flex-col">
+            <button
+              onClick={finalizeReservation}
+              className="flex w-full items-center justify-center gap-2 rounded-xl gradient-primary py-3 text-sm font-bold text-white glow-primary"
+            >
+              <CheckCircle2 className="h-4 w-4" /> Confirmar y generar QR
+            </button>
+            <button
+              onClick={() => setConfirmOpen(false)}
+              className="w-full rounded-xl border border-border bg-card py-3 text-sm font-semibold text-muted-foreground"
+            >
+              Revisar de nuevo
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

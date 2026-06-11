@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as MyReservationsRouteImport } from './routes/my-reservations'
+import { Route as MyQrRouteImport } from './routes/my-qr'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SelectTableEventIdRouteImport } from './routes/select-table.$eventId'
 import { Route as ReserveEventIdRouteImport } from './routes/reserve.$eventId'
@@ -19,6 +20,11 @@ import { Route as EventIdRouteImport } from './routes/event.$id'
 const MyReservationsRoute = MyReservationsRouteImport.update({
   id: '/my-reservations',
   path: '/my-reservations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyQrRoute = MyQrRouteImport.update({
+  id: '/my-qr',
+  path: '/my-qr',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -49,6 +55,7 @@ const EventIdRoute = EventIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/my-qr': typeof MyQrRoute
   '/my-reservations': typeof MyReservationsRoute
   '/event/$id': typeof EventIdRoute
   '/reservation/$id': typeof ReservationIdRoute
@@ -57,6 +64,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/my-qr': typeof MyQrRoute
   '/my-reservations': typeof MyReservationsRoute
   '/event/$id': typeof EventIdRoute
   '/reservation/$id': typeof ReservationIdRoute
@@ -66,6 +74,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/my-qr': typeof MyQrRoute
   '/my-reservations': typeof MyReservationsRoute
   '/event/$id': typeof EventIdRoute
   '/reservation/$id': typeof ReservationIdRoute
@@ -76,6 +85,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/my-qr'
     | '/my-reservations'
     | '/event/$id'
     | '/reservation/$id'
@@ -84,6 +94,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/my-qr'
     | '/my-reservations'
     | '/event/$id'
     | '/reservation/$id'
@@ -92,6 +103,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/my-qr'
     | '/my-reservations'
     | '/event/$id'
     | '/reservation/$id'
@@ -101,6 +113,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  MyQrRoute: typeof MyQrRoute
   MyReservationsRoute: typeof MyReservationsRoute
   EventIdRoute: typeof EventIdRoute
   ReservationIdRoute: typeof ReservationIdRoute
@@ -115,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/my-reservations'
       fullPath: '/my-reservations'
       preLoaderRoute: typeof MyReservationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-qr': {
+      id: '/my-qr'
+      path: '/my-qr'
+      fullPath: '/my-qr'
+      preLoaderRoute: typeof MyQrRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -157,6 +177,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  MyQrRoute: MyQrRoute,
   MyReservationsRoute: MyReservationsRoute,
   EventIdRoute: EventIdRoute,
   ReservationIdRoute: ReservationIdRoute,

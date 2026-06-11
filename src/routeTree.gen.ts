@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SelectTableEventIdRouteImport } from './routes/select-table.$eventId'
+import { Route as ReserveEventIdRouteImport } from './routes/reserve.$eventId'
 import { Route as EventIdRouteImport } from './routes/event.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -23,6 +24,11 @@ const SelectTableEventIdRoute = SelectTableEventIdRouteImport.update({
   path: '/select-table/$eventId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReserveEventIdRoute = ReserveEventIdRouteImport.update({
+  id: '/reserve/$eventId',
+  path: '/reserve/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EventIdRoute = EventIdRouteImport.update({
   id: '/event/$id',
   path: '/event/$id',
@@ -32,30 +38,39 @@ const EventIdRoute = EventIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/event/$id': typeof EventIdRoute
+  '/reserve/$eventId': typeof ReserveEventIdRoute
   '/select-table/$eventId': typeof SelectTableEventIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/event/$id': typeof EventIdRoute
+  '/reserve/$eventId': typeof ReserveEventIdRoute
   '/select-table/$eventId': typeof SelectTableEventIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/event/$id': typeof EventIdRoute
+  '/reserve/$eventId': typeof ReserveEventIdRoute
   '/select-table/$eventId': typeof SelectTableEventIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/event/$id' | '/select-table/$eventId'
+  fullPaths: '/' | '/event/$id' | '/reserve/$eventId' | '/select-table/$eventId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/event/$id' | '/select-table/$eventId'
-  id: '__root__' | '/' | '/event/$id' | '/select-table/$eventId'
+  to: '/' | '/event/$id' | '/reserve/$eventId' | '/select-table/$eventId'
+  id:
+    | '__root__'
+    | '/'
+    | '/event/$id'
+    | '/reserve/$eventId'
+    | '/select-table/$eventId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   EventIdRoute: typeof EventIdRoute
+  ReserveEventIdRoute: typeof ReserveEventIdRoute
   SelectTableEventIdRoute: typeof SelectTableEventIdRoute
 }
 
@@ -75,6 +90,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SelectTableEventIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reserve/$eventId': {
+      id: '/reserve/$eventId'
+      path: '/reserve/$eventId'
+      fullPath: '/reserve/$eventId'
+      preLoaderRoute: typeof ReserveEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/event/$id': {
       id: '/event/$id'
       path: '/event/$id'
@@ -88,6 +110,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   EventIdRoute: EventIdRoute,
+  ReserveEventIdRoute: ReserveEventIdRoute,
   SelectTableEventIdRoute: SelectTableEventIdRoute,
 }
 export const routeTree = rootRouteImport

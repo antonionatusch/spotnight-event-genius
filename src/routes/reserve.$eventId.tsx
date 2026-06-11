@@ -22,6 +22,7 @@ function Reserve() {
   const addReservation = useStore((s) => s.addReservation);
   const navigate = useNavigate();
   const [name, setName] = useState("Carlos Mendoza");
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   if (!event) return <div className="p-6">Evento no encontrado</div>;
 
@@ -30,8 +31,9 @@ function Reserve() {
   const commission = Math.round(basePrice * 0.1);
   const total = basePrice;
   const people = item?.capacity ?? 1;
+  const floorLabel = item?.floor === "planta_alta" ? "Planta Alta / VIP" : item?.floor === "planta_baja" ? "Planta Baja" : "—";
 
-  const onConfirm = () => {
+  const finalizeReservation = () => {
     const res = addReservation({
       eventId: event.id,
       eventName: event.name,
@@ -47,6 +49,7 @@ function Reserve() {
       zone: item?.zone,
       floor: item?.floor,
     });
+    setConfirmOpen(false);
     navigate({ to: "/reservation/$id", params: { id: res.id } });
   };
 

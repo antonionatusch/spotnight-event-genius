@@ -82,15 +82,19 @@ function CheckIn() {
       </div>
 
       {result && (
-        <div className={`flex items-center gap-3 rounded-2xl border p-4 ${
-          result.ok ? "border-success/40 bg-success/10 text-success" :
-          result.resCode ? "border-warning/40 bg-warning/10 text-warning" :
-          "border-destructive/40 bg-destructive/10 text-destructive"
+        <div className={`flex items-start gap-3 rounded-2xl border p-4 ${
+          result.ok
+            ? "border-success/40 bg-success/10 text-success"
+            : result.duplicate || result.expired
+            ? "border-destructive bg-destructive/15 text-destructive shadow-[0_0_24px_rgba(239,68,68,0.35)]"
+            : "border-destructive/40 bg-destructive/10 text-destructive"
         }`}>
-          {result.ok ? <CheckCircle2 className="h-6 w-6" /> : result.resCode ? <AlertCircle className="h-6 w-6" /> : <XCircle className="h-6 w-6" />}
-          <div>
-            <p className="font-bold">{result.message}</p>
-            {result.resCode && <p className="text-xs opacity-80">{result.resCode}</p>}
+          {result.ok ? <CheckCircle2 className="h-6 w-6 shrink-0" /> : result.duplicate ? <AlertCircle className="h-6 w-6 shrink-0" /> : <XCircle className="h-6 w-6 shrink-0" />}
+          <div className="flex-1">
+            <p className="font-bold leading-tight">{result.duplicate || result.expired ? "⚠ " : ""}{result.message}</p>
+            {result.resCode && <p className="text-xs opacity-80 mt-0.5">Reserva {result.resCode}</p>}
+            {result.duplicate && <p className="text-[11px] opacity-90 mt-1">Esta reserva ya fue utilizada. Verificá la identidad del asistente.</p>}
+            {result.expired && <p className="text-[11px] opacity-90 mt-1">El evento finalizó. No se permiten más ingresos.</p>}
           </div>
         </div>
       )}

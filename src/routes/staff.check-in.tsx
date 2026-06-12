@@ -14,12 +14,12 @@ function CheckIn() {
   const checkedIn = reservations.filter((r) => r.status === "Ingresó").length;
   const checkIn = useStore((s) => s.checkIn);
   const [code, setCode] = useState("");
-  const [result, setResult] = useState<{ ok: boolean; message: string; resCode?: string } | null>(null);
+  const [result, setResult] = useState<{ ok: boolean; message: string; resCode?: string; duplicate?: boolean; expired?: boolean } | null>(null);
 
   const onValidate = () => {
     if (!code.trim()) return;
     const r = checkIn(code);
-    setResult({ ok: r.ok, message: r.message, resCode: r.reservation?.code });
+    setResult({ ok: r.ok, message: r.message, resCode: r.reservation?.code, duplicate: r.duplicate, expired: r.expired });
     if (r.ok) toast.success(`Ingreso registrado: ${r.reservation?.code}`);
     else toast.error(r.message);
     setCode("");
@@ -66,12 +66,12 @@ function CheckIn() {
           <Search className="h-4 w-4 text-primary" />
           <input
             value={code}
-            onChange={(e) => setCode(e.target.value.toUpperCase())}
-            placeholder="EJ: SN-004"
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="EJ: SN-004 o pegá el JSON del QR"
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
         </div>
-        <p className="text-[11px] text-muted-foreground">Prueba: SN-001 (válida) · SN-002 (usada) · otro código (inválida)</p>
+        <p className="text-[11px] text-muted-foreground">Acepta código corto o JSON del QR · Prueba: SN-001 (válida) · SN-002 (usada)</p>
         <button
           onClick={onValidate}
           disabled={!code.trim()}
@@ -82,15 +82,19 @@ function CheckIn() {
       </div>
 
       {result && (
-        <div className={`flex items-center gap-3 rounded-2xl border p-4 ${
-          result.ok ? "border-success/40 bg-success/10 text-success" :
-          result.resCode ? "border-warning/40 bg-warning/10 text-warning" :
-          "border-destructive/40 bg-destructive/10 text-destructive"
+        <div className={`flex items-start gap-3 rounded-2xl border p-4 ${
+          result.ok
+            ? "border-success/40 bg-success/10 text-success"
+            : result.duplicate || result.expired
+            ? "border-destructive bg-destructive/15 text-destructive shadow-[0_0_24px_rgba(239,68,68,0.35)]"
+            : "border-destructive/40 bg-destructive/10 text-destructive"
         }`}>
-          {result.ok ? <CheckCircle2 className="h-6 w-6" /> : result.resCode ? <AlertCircle className="h-6 w-6" /> : <XCircle className="h-6 w-6" />}
-          <div>
-            <p className="font-bold">{result.message}</p>
-            {result.resCode && <p className="text-xs opacity-80">{result.resCode}</p>}
+          {result.ok ? <CheckCircle2 className="h-6 w-6 shrink-0" /> : result.duplicate ? <AlertCircle className="h-6 w-6 shrink-0" /> : <XCircle className="h-6 w-6 shrink-0" />}
+          <div className="flex-1">
+            <p className="font-bold leading-tight">{result.duplicate || result.expired ? "⚠ " : ""}{result.message}</p>
+            {result.resCode && <p className="text-xs opacity-80 mt-0.5">Reserva {result.resCode}</p>}
+            {result.duplicate && <p className="text-[11px] opacity-90 mt-1">Esta reserva ya fue utilizada. Verificá la identidad del asistente.</p>}
+            {result.expired && <p className="text-[11px] opacity-90 mt-1">El evento finalizó. No se permiten más ingresos.</p>}
           </div>
         </div>
       )}

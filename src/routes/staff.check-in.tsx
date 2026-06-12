@@ -14,12 +14,12 @@ function CheckIn() {
   const checkedIn = reservations.filter((r) => r.status === "Ingresó").length;
   const checkIn = useStore((s) => s.checkIn);
   const [code, setCode] = useState("");
-  const [result, setResult] = useState<{ ok: boolean; message: string; resCode?: string } | null>(null);
+  const [result, setResult] = useState<{ ok: boolean; message: string; resCode?: string; duplicate?: boolean; expired?: boolean } | null>(null);
 
   const onValidate = () => {
     if (!code.trim()) return;
     const r = checkIn(code);
-    setResult({ ok: r.ok, message: r.message, resCode: r.reservation?.code });
+    setResult({ ok: r.ok, message: r.message, resCode: r.reservation?.code, duplicate: r.duplicate, expired: r.expired });
     if (r.ok) toast.success(`Ingreso registrado: ${r.reservation?.code}`);
     else toast.error(r.message);
     setCode("");

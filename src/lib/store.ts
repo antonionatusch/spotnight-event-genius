@@ -36,6 +36,7 @@ export type EventItem = {
   date: string;
   startTime: string;
   endTime: string;
+  endsAtIso?: string; // explicit ISO end timestamp used for expiry validation
   location: string;
   description: string;
   imageUrl: string;

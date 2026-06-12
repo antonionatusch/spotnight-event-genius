@@ -78,6 +78,7 @@ const events: EventItem[] = [
     date: "Sáb 14 Jun",
     startTime: "23:00",
     endTime: "04:00",
+    endsAtIso: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
     location: "Equipetrol",
     description:
       "Una noche única con los mejores DJs de la escena. Ambiente exclusivo, cócteles premium y la pista más encendida de la ciudad. Reservá tu lugar antes de llegar.",

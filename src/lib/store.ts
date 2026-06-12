@@ -66,6 +66,7 @@ export type Reservation = {
   floor?: Floor;
   createdAt: string;
   checkedInAt?: string;
+  cancelledAt?: string;
 };
 
 // -------- Mock events --------

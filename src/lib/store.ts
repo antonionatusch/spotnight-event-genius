@@ -230,7 +230,10 @@ type Store = {
   addEvent: (e: EventItem) => void;
   addReservation: (r: Omit<Reservation, "id" | "code" | "createdAt">) => Reservation;
   markReserved: (itemId: string) => void;
-  checkIn: (code: string) => { ok: boolean; message: string; reservation?: Reservation };
+  releaseItem: (itemId: string) => void;
+  cancelReservation: (id: string) => void;
+  isEventExpired: (eventId: string) => boolean;
+  checkIn: (code: string) => { ok: boolean; message: string; reservation?: Reservation; duplicate?: boolean; expired?: boolean };
 };
 
 export const useStore = create<Store>((set, get) => ({
@@ -251,6 +254,25 @@ export const useStore = create<Store>((set, get) => ({
     set((s) => ({
       venueMap: s.venueMap.map((i) => (i.id === itemId ? { ...i, status: "reserved" } : i)),
     })),
+  releaseItem: (itemId) =>
+    set((s) => ({
+      venueMap: s.venueMap.map((i) => (i.id === itemId ? { ...i, status: "available" } : i)),
+    })),
+  cancelReservation: (id) => {
+    const target = get().reservations.find((r) => r.id === id);
+    if (!target || target.status === "Cancelada") return;
+    set((s) => ({
+      reservations: s.reservations.map((r) =>
+        r.id === id ? { ...r, status: "Cancelada", cancelledAt: new Date().toISOString() } : r,
+      ),
+    }));
+    if (target.venueMapItemId) get().releaseItem(target.venueMapItemId);
+  },
+  isEventExpired: (eventId) => {
+    const ev = get().events.find((e) => e.id === eventId);
+    if (!ev?.endsAtIso) return false;
+    return Date.now() > new Date(ev.endsAtIso).getTime();
+  },
   checkIn: (rawCode) => {
     let input = rawCode.trim();
     try {
@@ -262,13 +284,19 @@ export const useStore = create<Store>((set, get) => ({
     const code = input.toUpperCase();
     const reservation = get().reservations.find((r) => r.code.toUpperCase() === code);
     if (!reservation) return { ok: false, message: "Código inválido" };
-    if (reservation.status === "Ingresó") return { ok: false, message: "Reserva ya utilizada", reservation };
-    if (reservation.status === "Cancelada") return { ok: false, message: "Reserva cancelada", reservation };
+    if (reservation.status === "Ingresó")
+      return { ok: false, message: "Ingreso duplicado · QR ya utilizado", reservation, duplicate: true };
+    if (reservation.status === "Cancelada")
+      return { ok: false, message: "Reserva cancelada", reservation };
+    if (get().isEventExpired(reservation.eventId))
+      return { ok: false, message: "Evento finalizado · QR expirado", reservation, expired: true };
     set((s) => ({
       reservations: s.reservations.map((r) =>
         r.id === reservation.id ? { ...r, status: "Ingresó", checkedInAt: new Date().toISOString() } : r,
       ),
     }));
-    return { ok: true, message: "Ingreso registrado", reservation: { ...reservation, status: "Ingresó" } };
+    return { ok: true, message: "Ingreso registrado", reservation: { ...reservation, status: "Ingresó", checkedInAt: new Date().toISOString() } };
+  },
+}));
   },
 }));

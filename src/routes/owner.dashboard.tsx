@@ -10,10 +10,11 @@ export const Route = createFileRoute("/owner/dashboard")({
 function OwnerDashboard() {
   const events = useStore((s) => s.events);
   const reservations = useStore((s) => s.reservations);
-  const confirmed = reservations.filter((r) => r.status !== "Cancelada").length;
+  const active = reservations.filter((r) => r.status !== "Cancelada");
+  const confirmed = active.length;
   const checkedIn = reservations.filter((r) => r.status === "Ingresó").length;
-  const revenue = reservations.reduce((acc, r) => acc + r.totalAmount, 0);
-  const commission = reservations.reduce((acc, r) => acc + r.spotNightCommission, 0);
+  const revenue = active.reduce((acc, r) => acc + r.totalAmount, 0);
+  const commission = active.reduce((acc, r) => acc + r.spotNightCommission, 0);
   const capacity = events.reduce((a, e) => a + e.ticketTypes.reduce((b, t) => b + t.capacity, 0), 0);
   const available = events.reduce((a, e) => a + e.ticketTypes.reduce((b, t) => b + t.available, 0), 0);
   const occupancy = Math.round(((capacity - available) / capacity) * 100);

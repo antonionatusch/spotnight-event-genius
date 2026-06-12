@@ -67,11 +67,11 @@ function CheckIn() {
           <input
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
-            placeholder="EJ: SN-004"
+            placeholder="EJ: SN-004 o pegá el JSON del QR"
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
         </div>
-        <p className="text-[11px] text-muted-foreground">Prueba: SN-001 (válida) · SN-002 (usada) · otro código (inválida)</p>
+        <p className="text-[11px] text-muted-foreground">Acepta código corto o JSON del QR · Prueba: SN-001 (válida) · SN-002 (usada)</p>
         <button
           onClick={onValidate}
           disabled={!code.trim()}

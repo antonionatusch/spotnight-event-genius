@@ -66,7 +66,7 @@ function CheckIn() {
           <Search className="h-4 w-4 text-primary" />
           <input
             value={code}
-            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            onChange={(e) => setCode(e.target.value)}
             placeholder="EJ: SN-004 o pegá el JSON del QR"
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />

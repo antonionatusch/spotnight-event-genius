@@ -298,5 +298,3 @@ export const useStore = create<Store>((set, get) => ({
     return { ok: true, message: "Ingreso registrado", reservation: { ...reservation, status: "Ingresó", checkedInAt: new Date().toISOString() } };
   },
 }));
-  },
-}));

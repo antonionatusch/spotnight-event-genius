@@ -34,3 +34,5 @@ ios/
 *.njsproj
 *.sln
 *.sw?
+
+.env

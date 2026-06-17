@@ -84,7 +84,7 @@ const events: EventItem[] = [
   {
     id: 'e1',
     name: 'La Tuti Viruli',
-    venueName: 'SpotNight Club',
+    venueName: 'La Tuti Viruli',
     date: 'Sáb 14 Jun',
     startTime: '23:00',
     endTime: '04:00',
@@ -92,7 +92,8 @@ const events: EventItem[] = [
     location: 'Equipetrol',
     description:
       'Una noche única con los mejores DJs de la escena. Ambiente exclusivo, cócteles premium y la pista más encendida de la ciudad. Reservá tu lugar antes de llegar.',
-    imageUrl: 'https://images.unsplash.com/photo-1571266028243-d220bc562b09?w=1200&q=80',
+    imageUrl:
+      'https://p19-common-sign.tiktokcdn.com/tos-maliva-avt-0068/9a75a4046bc77ac0b34c46007886793d~tplv-tiktokx-cropcenter:1080:1080.jpeg?dr=14579&refresh_token=e0e6caa0&x-expires=1781888400&x-signature=RA7dy5SWS%2F2ju5ZGKBeUVin%2BEgQ%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=my2',
     status: 'active',
     isFeatured: true,
     hot: true,
@@ -108,7 +109,7 @@ const events: EventItem[] = [
   {
     id: 'e2',
     name: 'Noche Latina XL',
-    venueName: 'Club Euphoria',
+    venueName: 'La Tuti Viruli',
     date: 'Vie 13 Jun',
     startTime: '22:00',
     endTime: '04:00',
@@ -124,13 +125,14 @@ const events: EventItem[] = [
   {
     id: 'e3',
     name: 'Electro Night',
-    venueName: 'The Vault',
+    venueName: 'La Tuti Viruli',
     date: 'Dom 15 Jun',
     startTime: '00:00',
     endTime: '06:00',
     location: 'Urubó',
     description: 'Electro y techno con los mejores DJs internacionales.',
-    imageUrl: 'https://images.unsplash.com/photo-1574391884720-bbc049ec09ad?w=1200&q=80',
+    imageUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Daft_Punk_in_2013.jpg/1280px-Daft_Punk_in_2013.jpg',
     status: 'active',
     ticketTypes: [
       { id: 't1', name: 'General', price: 100, capacity: 250, available: 100 },
@@ -140,7 +142,7 @@ const events: EventItem[] = [
   {
     id: 'e4',
     name: 'Reggaeton Boom',
-    venueName: 'Arena Club',
+    venueName: 'La Tuti Viruli',
     date: 'Sáb 21 Jun',
     startTime: '21:30',
     endTime: '04:00',

@@ -14,7 +14,11 @@ function EventReservations() {
   const { id } = useParams({ from: "/owner/events/$id/reservations" });
   const event = useStore((s) => s.events.find((e) => e.id === id));
   const allReservations = useStore((s) => s.reservations);
-  const auditEvents = useStore((s) => s.auditEvents.filter((event) => event.eventId === id));
+  const allAuditEvents = useStore((s) => s.auditEvents);
+  const auditEvents = useMemo(
+    () => allAuditEvents.filter((event) => event.eventId === id),
+    [allAuditEvents, id],
+  );
   const reservations = useMemo(() => allReservations.filter((r) => r.eventId === id), [allReservations, id]);
   const cancelReservation = useStore((s) => s.cancelReservation);
   const upsertReservation = useStore((s) => s.upsertReservation);

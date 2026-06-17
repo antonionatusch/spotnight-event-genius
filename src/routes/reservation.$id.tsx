@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { QRCodeSVG } from "qrcode.react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Calendar, MapPin, Users, Share2, Download, CheckCircle2, Copy, Check, AlertTriangle, XCircle, Layers, Tag, Hash, Trash2 } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { AppHeader } from "@/components/AppHeader";
@@ -15,7 +15,11 @@ export const Route = createFileRoute("/reservation/$id")({
 function ReservationPage() {
   const { id } = useParams({ from: "/reservation/$id" });
   const reservation = useStore((s) => s.reservations.find((r) => r.id === id));
-  const auditEvents = useStore((s) => s.auditEvents.filter((e) => e.reservationId === id));
+  const allAuditEvents = useStore((s) => s.auditEvents);
+  const auditEvents = useMemo(
+    () => allAuditEvents.filter((e) => e.reservationId === id),
+    [allAuditEvents, id],
+  );
   const isEventExpired = useStore((s) => s.isEventExpired);
   const cancelReservation = useStore((s) => s.cancelReservation);
   const upsertReservation = useStore((s) => s.upsertReservation);

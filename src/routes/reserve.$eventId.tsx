@@ -118,7 +118,6 @@ function Reserve() {
 
       <div className="rounded-2xl border border-border bg-card px-4">
         {row("Precio mesa", `Bs. ${basePrice}`)}
-        {row("Comisión SpotNight (10%)", `Bs. ${commission}`)}
         <div className="flex items-center justify-between py-3">
           <span className="font-bold">Total estimado</span>
           <span className="text-lg font-bold text-success">Bs. {total}</span>

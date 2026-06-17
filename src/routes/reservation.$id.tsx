@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { QRCodeSVG } from "qrcode.react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Calendar, MapPin, Users, Share2, Download, CheckCircle2, Copy, Check, AlertTriangle, XCircle, Layers, Tag, Hash, Trash2 } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { AppHeader } from "@/components/AppHeader";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { cancelRemoteReservation } from "@/lib/reservations-api";
 
 export const Route = createFileRoute("/reservation/$id")({
   component: ReservationPage,
@@ -16,9 +17,19 @@ function ReservationPage() {
   const reservation = useStore((s) => s.reservations.find((r) => r.id === id));
   const isEventExpired = useStore((s) => s.isEventExpired);
   const cancelReservation = useStore((s) => s.cancelReservation);
+  const upsertReservation = useStore((s) => s.upsertReservation);
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const previousStatus = useRef(reservation?.status);
+
+  useEffect(() => {
+    if (previousStatus.current !== "Ingresó" && reservation?.status === "Ingresó") {
+      toast.success("Acceso correcto, pase");
+    }
+    previousStatus.current = reservation?.status;
+  }, [reservation?.status]);
 
   if (!reservation) return <div className="p-6">Reserva no encontrada</div>;
   const r = reservation;
@@ -49,11 +60,21 @@ function ReservationPage() {
     }
   };
 
-  const onCancel = () => {
-    cancelReservation(r.id);
-    setCancelOpen(false);
-    toast.success("Reserva cancelada · cupo liberado");
-    navigate({ to: "/my-reservations" });
+  const onCancel = async () => {
+    setCancelling(true);
+    try {
+      const updated = await cancelRemoteReservation(r.id);
+      upsertReservation(updated);
+      setCancelOpen(false);
+      toast.success("Reserva cancelada · cupo liberado");
+      navigate({ to: "/my-reservations" });
+    } catch (error) {
+      console.error(error);
+      cancelReservation(r.id);
+      toast.error("No se pudo cancelar en Supabase; se canceló localmente");
+    } finally {
+      setCancelling(false);
+    }
   };
 
   return (
@@ -70,6 +91,13 @@ function ReservationPage() {
           <div className="flex items-center gap-2 rounded-2xl border border-destructive/50 bg-destructive/15 px-4 py-3 text-destructive">
             <XCircle className="h-5 w-5" />
             <p className="text-sm font-bold">Reserva cancelada</p>
+          </div>
+        )}
+        {used && (
+          <div className="rounded-3xl border border-success/50 bg-success/15 p-5 text-center text-success shadow-[0_0_32px_rgba(34,197,94,0.25)]">
+            <CheckCircle2 className="mx-auto h-10 w-10" />
+            <p className="mt-2 text-2xl font-black">Acceso correcto</p>
+            <p className="text-sm font-bold">Pase</p>
           </div>
         )}
         {!inactive && (
@@ -157,9 +185,10 @@ function ReservationPage() {
             <DialogFooter className="flex-col gap-2 sm:flex-col">
               <button
                 onClick={onCancel}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-destructive py-3 text-sm font-bold text-white"
+                disabled={cancelling}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-destructive py-3 text-sm font-bold text-white disabled:opacity-50"
               >
-                <Trash2 className="h-4 w-4" /> Sí, cancelar reserva
+                <Trash2 className="h-4 w-4" /> {cancelling ? "Cancelando..." : "Sí, cancelar reserva"}
               </button>
               <button
                 onClick={() => setCancelOpen(false)}

@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useStore, type Reservation } from "@/lib/store";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { cancelRemoteReservation } from "@/lib/reservations-api";
 
 export const Route = createFileRoute("/owner/events/$id/reservations")({
   component: EventReservations,
@@ -12,9 +13,12 @@ export const Route = createFileRoute("/owner/events/$id/reservations")({
 function EventReservations() {
   const { id } = useParams({ from: "/owner/events/$id/reservations" });
   const event = useStore((s) => s.events.find((e) => e.id === id));
-  const reservations = useStore((s) => s.reservations.filter((r) => r.eventId === id));
+  const allReservations = useStore((s) => s.reservations);
+  const reservations = useMemo(() => allReservations.filter((r) => r.eventId === id), [allReservations, id]);
   const cancelReservation = useStore((s) => s.cancelReservation);
+  const upsertReservation = useStore((s) => s.upsertReservation);
   const [pending, setPending] = useState<Reservation | null>(null);
+  const [cancelling, setCancelling] = useState(false);
 
   if (!event) return <div className="p-6">Evento no encontrado</div>;
 
@@ -22,11 +26,21 @@ function EventReservations() {
   const checkedIn = reservations.filter((r) => r.status === "Ingresó").length;
   const revenue = active.reduce((a, r) => a + r.totalAmount, 0);
 
-  const confirmCancel = () => {
+  const confirmCancel = async () => {
     if (!pending) return;
-    cancelReservation(pending.id);
-    toast.success(`Reserva ${pending.code} cancelada · cupo liberado`);
-    setPending(null);
+    setCancelling(true);
+    try {
+      const updated = await cancelRemoteReservation(pending.id);
+      upsertReservation(updated);
+      toast.success(`Reserva ${pending.code} cancelada · cupo liberado`);
+      setPending(null);
+    } catch (error) {
+      console.error(error);
+      cancelReservation(pending.id);
+      toast.error("No se pudo cancelar en Supabase; se canceló localmente");
+    } finally {
+      setCancelling(false);
+    }
   };
 
   return (
@@ -86,8 +100,8 @@ function EventReservations() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col gap-2 sm:flex-col">
-            <button onClick={confirmCancel} className="flex w-full items-center justify-center gap-2 rounded-xl bg-destructive py-3 text-sm font-bold text-white">
-              <Trash2 className="h-4 w-4" /> Confirmar cancelación
+            <button onClick={confirmCancel} disabled={cancelling} className="flex w-full items-center justify-center gap-2 rounded-xl bg-destructive py-3 text-sm font-bold text-white disabled:opacity-50">
+              <Trash2 className="h-4 w-4" /> {cancelling ? "Cancelando..." : "Confirmar cancelación"}
             </button>
             <button onClick={() => setPending(null)} className="w-full rounded-xl border border-border bg-card py-3 text-sm font-semibold text-muted-foreground">
               Volver

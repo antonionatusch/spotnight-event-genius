@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { useReservationsSync } from "../lib/useReservationsSync";
 import { BottomNav } from "../components/BottomNav";
 import { Toaster } from "sonner";
 
@@ -117,6 +118,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useReservationsSync();
 
   return (
     <QueryClientProvider client={queryClient}>

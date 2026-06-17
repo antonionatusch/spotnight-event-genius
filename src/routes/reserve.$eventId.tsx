@@ -3,6 +3,8 @@ import { useState } from "react";
 import { ArrowLeft, Calendar, Clock, MapPin, User, CheckCircle2, MapPinned, Layers, Tag } from "lucide-react";
 import { useStore, type TicketKind } from "@/lib/store";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { createReservation } from "@/lib/reservations-api";
+import { toast } from "sonner";
 
 type Search = { ticket?: TicketKind; itemId?: string };
 
@@ -19,10 +21,11 @@ function Reserve() {
   const { ticket = "General", itemId } = useSearch({ from: "/reserve/$eventId" });
   const event = useStore((s) => s.events.find((e) => e.id === eventId));
   const item = useStore((s) => (itemId ? s.venueMap.find((i) => i.id === itemId) : null));
-  const addReservation = useStore((s) => s.addReservation);
+  const upsertReservation = useStore((s) => s.upsertReservation);
   const navigate = useNavigate();
   const [name, setName] = useState("Carlos Mendoza");
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   if (!event) return <div className="p-6">Evento no encontrado</div>;
 
@@ -33,24 +36,34 @@ function Reserve() {
   const people = item?.capacity ?? 1;
   const floorLabel = item?.floor === "planta_alta" ? "Planta Alta / VIP" : item?.floor === "planta_baja" ? "Planta Baja" : "—";
 
-  const finalizeReservation = () => {
-    const res = addReservation({
-      eventId: event.id,
-      eventName: event.name,
-      venueName: event.venueName,
-      userName: name,
-      ticketType: ticket,
-      peopleCount: people,
-      totalAmount: total,
-      spotNightCommission: commission,
-      status: "Confirmada",
-      venueMapItemId: item?.id,
-      venueMapItemLabel: item?.label,
-      zone: item?.zone,
-      floor: item?.floor,
-    });
-    setConfirmOpen(false);
-    navigate({ to: "/reservation/$id", params: { id: res.id } });
+  const finalizeReservation = async () => {
+    setSubmitting(true);
+    try {
+      const res = await createReservation({
+        eventId: event.id,
+        eventName: event.name,
+        venueName: event.venueName,
+        userName: name,
+        ticketType: ticket,
+        peopleCount: people,
+        totalAmount: total,
+        spotNightCommission: commission,
+        status: "Confirmada",
+        venueMapItemId: item?.id,
+        venueMapItemLabel: item?.label,
+        zone: item?.zone,
+        floor: item?.floor,
+      });
+      upsertReservation(res);
+      setConfirmOpen(false);
+      toast.success("Reserva confirmada · QR generado");
+      navigate({ to: "/reservation/$id", params: { id: res.id } });
+    } catch (error) {
+      console.error(error);
+      toast.error("No se pudo crear la reserva");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const row = (k: string, v: React.ReactNode, accent?: string) => (
@@ -186,13 +199,15 @@ function Reserve() {
           <DialogFooter className="flex-col gap-2 sm:flex-col">
             <button
               onClick={finalizeReservation}
-              className="flex w-full items-center justify-center gap-2 rounded-xl gradient-primary py-3 text-sm font-bold text-white glow-primary"
+              disabled={submitting}
+              className="flex w-full items-center justify-center gap-2 rounded-xl gradient-primary py-3 text-sm font-bold text-white glow-primary disabled:opacity-50"
             >
-              <CheckCircle2 className="h-4 w-4" /> Confirmar y generar QR
+              <CheckCircle2 className="h-4 w-4" /> {submitting ? "Generando..." : "Confirmar y generar QR"}
             </button>
             <button
               onClick={() => setConfirmOpen(false)}
-              className="w-full rounded-xl border border-border bg-card py-3 text-sm font-semibold text-muted-foreground"
+              disabled={submitting}
+              className="w-full rounded-xl border border-border bg-card py-3 text-sm font-semibold text-muted-foreground disabled:opacity-50"
             >
               Revisar de nuevo
             </button>

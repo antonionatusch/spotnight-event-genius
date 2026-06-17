@@ -1,13 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useStore } from "@/lib/store";
 import { AppHeader } from "@/components/AppHeader";
+import { useMemo } from "react";
 
 export const Route = createFileRoute("/my-qr")({
   component: MyQR,
 });
 
 function MyQR() {
-  const reservations = useStore((s) => s.reservations.filter((r) => r.status === "Confirmada"));
+  const allReservations = useStore((s) => s.reservations);
+  const reservations = useMemo(
+    () => allReservations.filter((r) => r.status === "Confirmada"),
+    [allReservations],
+  );
   const latest = reservations[0];
   if (!latest) {
     return (

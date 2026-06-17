@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "@/lib/store";
 import { Shield, Camera, Search, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { checkInRemoteReservation } from "@/lib/reservations-api";
 
 export const Route = createFileRoute("/staff/check-in")({
   component: CheckIn,
@@ -10,19 +11,102 @@ export const Route = createFileRoute("/staff/check-in")({
 
 function CheckIn() {
   const event = useStore((s) => s.events[0]);
-  const reservations = useStore((s) => s.reservations.filter((r) => r.eventId === event.id));
+  const allReservations = useStore((s) => s.reservations);
+  const reservations = useMemo(
+    () => (event ? allReservations.filter((r) => r.eventId === event.id) : []),
+    [allReservations, event],
+  );
   const checkedIn = reservations.filter((r) => r.status === "Ingresó").length;
-  const checkIn = useStore((s) => s.checkIn);
+  const localCheckIn = useStore((s) => s.checkIn);
+  const upsertReservation = useStore((s) => s.upsertReservation);
   const [code, setCode] = useState("");
+  const [scanning, setScanning] = useState(false);
+  const [validating, setValidating] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string; resCode?: string; duplicate?: boolean; expired?: boolean } | null>(null);
+  const scannerRef = useRef<import("html5-qrcode").Html5Qrcode | null>(null);
+  const validatingRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      const scanner = scannerRef.current;
+      if (scanner) {
+        void scanner.stop().catch(() => undefined);
+        void scanner.clear().catch(() => undefined);
+      }
+    };
+  }, []);
+
+  if (!event) return <div className="p-6">Evento no encontrado</div>;
+
+  const stopScanner = async () => {
+    const scanner = scannerRef.current;
+    if (!scanner) return;
+    try {
+      await scanner.stop();
+      await scanner.clear();
+    } catch {
+      // Scanner may already be stopped.
+    } finally {
+      scannerRef.current = null;
+      setScanning(false);
+    }
+  };
+
+  const validateCode = async (rawCode: string) => {
+    if (!rawCode.trim() || validatingRef.current) return;
+    validatingRef.current = true;
+    setValidating(true);
+    try {
+      const r = await checkInRemoteReservation(rawCode, event.id);
+      if (r.reservation) upsertReservation(r.reservation);
+      setResult({ ok: r.ok, message: r.message, resCode: r.reservation?.code, duplicate: r.duplicate, expired: r.expired });
+      if (r.ok) {
+        toast.success(`Acceso correcto: ${r.reservation?.code}`);
+        await stopScanner();
+      } else {
+        toast.error(r.message);
+      }
+    } catch (error) {
+      console.error(error);
+      const r = localCheckIn(rawCode);
+      setResult({ ok: r.ok, message: r.message, resCode: r.reservation?.code, duplicate: r.duplicate, expired: r.expired });
+      if (r.ok) toast.success(`Ingreso local registrado: ${r.reservation?.code}`);
+      else toast.error("No se pudo validar con Supabase");
+    } finally {
+      validatingRef.current = false;
+      setValidating(false);
+      setCode("");
+    }
+  };
+
+  const startScanner = async () => {
+    if (scanning) {
+      await stopScanner();
+      return;
+    }
+    try {
+      const { Html5Qrcode } = await import("html5-qrcode");
+      const scanner = new Html5Qrcode("staff-qr-reader");
+      scannerRef.current = scanner;
+      await scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 240, height: 240 } },
+        (decodedText) => {
+          void validateCode(decodedText);
+        },
+        () => undefined,
+      );
+      setScanning(true);
+      toast.success("Cámara lista para escanear");
+    } catch (error) {
+      console.error(error);
+      toast.error("No se pudo abrir la cámara");
+      setScanning(false);
+    }
+  };
 
   const onValidate = () => {
-    if (!code.trim()) return;
-    const r = checkIn(code);
-    setResult({ ok: r.ok, message: r.message, resCode: r.reservation?.code, duplicate: r.duplicate, expired: r.expired });
-    if (r.ok) toast.success(`Ingreso registrado: ${r.reservation?.code}`);
-    else toast.error(r.message);
-    setCode("");
+    void validateCode(code);
   };
 
   return (
@@ -51,13 +135,27 @@ function CheckIn() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card p-8 text-center space-y-3">
-        <div className="relative mx-auto h-32 w-32">
-          <div className="absolute inset-0 rounded-lg border-2 border-transparent" style={{ borderImage: "linear-gradient(135deg, var(--color-primary), var(--color-magenta)) 1" }} />
-          <Camera className="absolute inset-0 m-auto h-12 w-12 text-primary" />
+      <div className="rounded-2xl border border-border bg-card p-4 text-center space-y-3">
+        <div className="overflow-hidden rounded-xl border border-primary/40 bg-background/40">
+          <div id="staff-qr-reader" className="min-h-48" />
+          {!scanning && (
+            <div className="flex min-h-48 flex-col items-center justify-center gap-3 p-6">
+              <div className="relative h-32 w-32">
+                <div className="absolute inset-0 rounded-lg border-2 border-transparent" style={{ borderImage: "linear-gradient(135deg, var(--color-primary), var(--color-magenta)) 1" }} />
+                <Camera className="absolute inset-0 m-auto h-12 w-12 text-primary" />
+              </div>
+            </div>
+          )}
         </div>
         <p className="text-sm font-bold">Lector QR</p>
         <p className="text-xs text-muted-foreground">Apuntá la cámara al código QR del asistente</p>
+        <button
+          onClick={startScanner}
+          disabled={validating}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-primary/50 bg-primary/10 py-3 text-sm font-bold text-primary disabled:opacity-40"
+        >
+          <Camera className="h-4 w-4" /> {scanning ? "Detener cámara" : "Iniciar cámara"}
+        </button>
       </div>
 
       <div className="space-y-2">
@@ -74,10 +172,10 @@ function CheckIn() {
         <p className="text-[11px] text-muted-foreground">Acepta código corto o JSON del QR · Prueba: SN-001 (válida) · SN-002 (usada)</p>
         <button
           onClick={onValidate}
-          disabled={!code.trim()}
+          disabled={!code.trim() || validating}
           className="flex w-full items-center justify-center gap-2 rounded-2xl gradient-primary py-3.5 text-sm font-bold text-white glow-primary disabled:opacity-40"
         >
-          <Shield className="h-4 w-4" /> Validar Reserva
+          <Shield className="h-4 w-4" /> {validating ? "Validando..." : "Validar Reserva"}
         </button>
       </div>
 

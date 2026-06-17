@@ -639,6 +639,8 @@ type Store = {
   venueMap: VenueMapItem[];
   reservations: Reservation[];
   addEvent: (e: EventItem) => void;
+  setReservations: (reservations: Reservation[]) => void;
+  upsertReservation: (reservation: Reservation) => void;
   addReservation: (r: Omit<Reservation, 'id' | 'code' | 'createdAt'>) => Reservation;
   markReserved: (itemId: string) => void;
   releaseItem: (itemId: string) => void;
@@ -660,6 +662,23 @@ export const useStore = create<Store>((set, get) => ({
   venueMap,
   reservations: seedReservations,
   addEvent: (e) => set((s) => ({ events: [e, ...s.events] })),
+  setReservations: (reservations) =>
+    set((s) => ({
+      reservations,
+      venueMap: syncVenueMapFromReservations(venueMap, reservations, s.venueMap),
+    })),
+  upsertReservation: (reservation) =>
+    set((s) => {
+      const exists = s.reservations.some((r) => r.id === reservation.id);
+      const reservations = exists
+        ? s.reservations.map((r) => (r.id === reservation.id ? reservation : r))
+        : [reservation, ...s.reservations];
+
+      return {
+        reservations,
+        venueMap: syncVenueMapFromReservations(venueMap, reservations, s.venueMap),
+      };
+    }),
   addReservation: (r) => {
     const code = `SN-${String(get().reservations.length + 1).padStart(3, '0')}`;
     const newR: Reservation = {
@@ -731,3 +750,27 @@ export const useStore = create<Store>((set, get) => ({
     };
   },
 }));
+
+function syncVenueMapFromReservations(
+  baseMap: VenueMapItem[],
+  reservations: Reservation[],
+  currentMap: VenueMapItem[],
+) {
+  const currentById = new Map(currentMap.map((i) => [i.id, i]));
+  const statusByItem = new Map<string, SeatStatus>();
+
+  for (const reservation of reservations) {
+    if (!reservation.venueMapItemId) continue;
+    if (reservation.status === 'Cancelada') continue;
+    statusByItem.set(reservation.venueMapItemId, reservation.status === 'Ingresó' ? 'occupied' : 'reserved');
+  }
+
+  return baseMap.map((item) => {
+    const syncedStatus = statusByItem.get(item.id);
+    if (syncedStatus) return { ...item, status: syncedStatus };
+
+    const current = currentById.get(item.id);
+    if (current?.status === 'selected') return { ...item, status: 'selected' };
+    return item;
+  });
+}

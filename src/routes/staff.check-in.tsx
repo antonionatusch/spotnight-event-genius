@@ -108,6 +108,11 @@ function CheckIn() {
       toast.success("Cámara lista para escanear");
     } catch (error) {
       console.error(error);
+      const scanner = scannerRef.current;
+      if (scanner) {
+        void scanner.clear().catch(() => undefined);
+        scannerRef.current = null;
+      }
       toast.error("No se pudo abrir la cámara");
       setScanning(false);
     }

@@ -25,6 +25,7 @@ function CheckIn() {
   const [result, setResult] = useState<{ ok: boolean; message: string; resCode?: string; duplicate?: boolean; expired?: boolean } | null>(null);
   const scannerRef = useRef<import("html5-qrcode").Html5Qrcode | null>(null);
   const validatingRef = useRef(false);
+  const lastScanRef = useRef<{ rawCode: string; scannedAt: number } | null>(null);
 
   useEffect(() => {
     return () => {
@@ -53,25 +54,32 @@ function CheckIn() {
   };
 
   const validateCode = async (rawCode: string) => {
-    if (!rawCode.trim() || validatingRef.current) return;
+    const normalizedCode = rawCode.trim();
+    if (!normalizedCode || validatingRef.current) return;
+
+    const lastScan = lastScanRef.current;
+    const now = Date.now();
+    if (lastScan?.rawCode === normalizedCode && now - lastScan.scannedAt < 3000) return;
+    lastScanRef.current = { rawCode: normalizedCode, scannedAt: now };
+
     validatingRef.current = true;
     setValidating(true);
     try {
-      const r = await checkInRemoteReservation(rawCode, event.id);
+      const r = await checkInRemoteReservation(normalizedCode, event.id);
       if (r.reservation) upsertReservation(r.reservation);
       setResult({ ok: r.ok, message: r.message, resCode: r.reservation?.code, duplicate: r.duplicate, expired: r.expired });
       if (r.ok) {
-        toast.success(`Acceso correcto: ${r.reservation?.code}`);
+        toast.success(`Acceso correcto: ${r.reservation?.code}`, { id: "check-in-result" });
         await stopScanner();
       } else {
-        toast.error(r.message);
+        toast.error(r.message, { id: "check-in-result" });
       }
     } catch (error) {
       console.error(error);
-      const r = localCheckIn(rawCode);
+      const r = localCheckIn(normalizedCode);
       setResult({ ok: r.ok, message: r.message, resCode: r.reservation?.code, duplicate: r.duplicate, expired: r.expired });
-      if (r.ok) toast.success(`Ingreso local registrado: ${r.reservation?.code}`);
-      else toast.error("No se pudo validar con Supabase");
+      if (r.ok) toast.success(`Ingreso local registrado: ${r.reservation?.code}`, { id: "check-in-result" });
+      else toast.error(r.duplicate ? r.message : "No se pudo validar con Supabase", { id: "check-in-result" });
     } finally {
       validatingRef.current = false;
       setValidating(false);

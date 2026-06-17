@@ -15,6 +15,7 @@ export const Route = createFileRoute("/reservation/$id")({
 function ReservationPage() {
   const { id } = useParams({ from: "/reservation/$id" });
   const reservation = useStore((s) => s.reservations.find((r) => r.id === id));
+  const auditEvents = useStore((s) => s.auditEvents.filter((e) => e.reservationId === id));
   const isEventExpired = useStore((s) => s.isEventExpired);
   const cancelReservation = useStore((s) => s.cancelReservation);
   const upsertReservation = useStore((s) => s.upsertReservation);
@@ -23,6 +24,7 @@ function ReservationPage() {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const previousStatus = useRef(reservation?.status);
+  const lastSeenAuditEventId = useRef<string | undefined>(auditEvents[0]?.id);
 
   useEffect(() => {
     if (previousStatus.current !== "Ingresó" && reservation?.status === "Ingresó") {
@@ -31,12 +33,27 @@ function ReservationPage() {
     previousStatus.current = reservation?.status;
   }, [reservation?.status]);
 
+  useEffect(() => {
+    const latest = auditEvents[0];
+    if (!latest || latest.id === lastSeenAuditEventId.current) return;
+
+    lastSeenAuditEventId.current = latest.id;
+    if (latest.type === "check_in_duplicate") {
+      toast.error("Intento de ingreso duplicado · Tu QR ya fue utilizado", { id: "reservation-audit-alert" });
+    } else if (latest.type === "check_in_success") {
+      toast.success("Acceso correcto, pase", { id: "reservation-audit-alert" });
+    } else if (latest.type === "check_in_cancelled" || latest.type === "check_in_expired") {
+      toast.error(latest.message, { id: "reservation-audit-alert" });
+    }
+  }, [auditEvents]);
+
   if (!reservation) return <div className="p-6">Reserva no encontrada</div>;
   const r = reservation;
   const expired = isEventExpired(r.eventId);
   const cancelled = r.status === "Cancelada";
   const used = r.status === "Ingresó";
   const inactive = expired || cancelled || used;
+  const latestDuplicate = auditEvents.find((event) => event.type === "check_in_duplicate");
 
   const qrPayload = JSON.stringify({
     code: r.code,
@@ -63,7 +80,7 @@ function ReservationPage() {
   const onCancel = async () => {
     setCancelling(true);
     try {
-      const updated = await cancelRemoteReservation(r.id);
+      const updated = await cancelRemoteReservation(r.id, "user");
       upsertReservation(updated);
       setCancelOpen(false);
       toast.success("Reserva cancelada · cupo liberado");
@@ -98,6 +115,14 @@ function ReservationPage() {
             <CheckCircle2 className="mx-auto h-10 w-10" />
             <p className="mt-2 text-2xl font-black">Acceso correcto</p>
             <p className="text-sm font-bold">Pase</p>
+          </div>
+        )}
+        {latestDuplicate && (
+          <div className="rounded-3xl border border-destructive/60 bg-destructive/15 p-5 text-center text-destructive shadow-[0_0_32px_rgba(239,68,68,0.25)]">
+            <AlertTriangle className="mx-auto h-10 w-10" />
+            <p className="mt-2 text-xl font-black">Intento duplicado detectado</p>
+            <p className="text-sm font-bold">Tu QR ya fue utilizado</p>
+            <p className="mt-1 text-xs opacity-80">{new Date(latestDuplicate.createdAt).toLocaleString()}</p>
           </div>
         )}
         {!inactive && (

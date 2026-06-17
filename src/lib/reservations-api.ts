@@ -1,6 +1,6 @@
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { getSupabase } from './supabase';
-import type { Reservation } from './store';
+import type { Reservation, ReservationAuditEvent } from './store';
 
 type ReservationRow = {
   id: string;
@@ -21,6 +21,20 @@ type ReservationRow = {
   created_at: string;
   checked_in_at: string | null;
   cancelled_at: string | null;
+};
+
+type ReservationAuditEventRow = {
+  id: string;
+  reservation_id: string | null;
+  event_id: string;
+  reservation_code: string;
+  type: ReservationAuditEvent['type'];
+  reason: string | null;
+  message: string;
+  actor_role: ReservationAuditEvent['actorRole'] | null;
+  actor_id: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
 };
 
 export type NewReservationInput = Omit<Reservation, 'id' | 'code' | 'createdAt'>;
@@ -54,6 +68,22 @@ export function reservationFromRow(row: ReservationRow): Reservation {
     createdAt: row.created_at,
     checkedInAt: row.checked_in_at ?? undefined,
     cancelledAt: row.cancelled_at ?? undefined,
+  };
+}
+
+export function auditEventFromRow(row: ReservationAuditEventRow): ReservationAuditEvent {
+  return {
+    id: row.id,
+    reservationId: row.reservation_id ?? undefined,
+    eventId: row.event_id,
+    reservationCode: row.reservation_code,
+    type: row.type,
+    reason: row.reason ?? undefined,
+    message: row.message,
+    actorRole: row.actor_role ?? undefined,
+    actorId: row.actor_id ?? undefined,
+    metadata: row.metadata ?? undefined,
+    createdAt: row.created_at,
   };
 }
 
@@ -99,6 +129,35 @@ export async function listReservations() {
   return ((data ?? []) as ReservationRow[]).map(reservationFromRow);
 }
 
+export async function listReservationAuditEvents(eventId?: string) {
+  const supabase = getSupabase();
+  let query = supabase
+    .from('reservation_audit_events')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(200);
+
+  if (eventId) query = query.eq('event_id', eventId);
+
+  const { data, error } = await query;
+
+  if (error) throw error;
+  return ((data ?? []) as ReservationAuditEventRow[]).map(auditEventFromRow);
+}
+
+export async function listAuditEventsForReservation(reservationId: string) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from('reservation_audit_events')
+    .select('*')
+    .eq('reservation_id', reservationId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (error) throw error;
+  return ((data ?? []) as ReservationAuditEventRow[]).map(auditEventFromRow);
+}
+
 export async function createReservation(input: NewReservationInput) {
   const supabase = getSupabase();
   const { data, error } = await supabase
@@ -111,7 +170,7 @@ export async function createReservation(input: NewReservationInput) {
   return reservationFromRow(data as ReservationRow);
 }
 
-export async function cancelRemoteReservation(id: string) {
+export async function cancelRemoteReservation(id: string, actorRole: ReservationAuditEvent['actorRole'] = 'owner') {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from('reservations')
@@ -121,7 +180,45 @@ export async function cancelRemoteReservation(id: string) {
     .single();
 
   if (error) throw error;
-  return reservationFromRow(data as ReservationRow);
+  const reservation = reservationFromRow(data as ReservationRow);
+
+  try {
+    await createReservationAuditEvent({
+      reservationId: reservation.id,
+      eventId: reservation.eventId,
+      reservationCode: reservation.code,
+      type: 'reservation_cancelled',
+      reason: 'cancelled',
+      message: 'Reserva cancelada · cupo liberado',
+      actorRole,
+    });
+  } catch (error) {
+    console.error(error);
+  }
+
+  return reservation;
+}
+
+export async function createReservationAuditEvent(input: Omit<ReservationAuditEvent, 'id' | 'createdAt'>) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from('reservation_audit_events')
+    .insert({
+      reservation_id: input.reservationId ?? null,
+      event_id: input.eventId,
+      reservation_code: input.reservationCode,
+      type: input.type,
+      reason: input.reason ?? null,
+      message: input.message,
+      actor_role: input.actorRole ?? null,
+      actor_id: input.actorId ?? null,
+      metadata: input.metadata ?? {},
+    })
+    .select('*')
+    .single();
+
+  if (error) throw error;
+  return auditEventFromRow(data as ReservationAuditEventRow);
 }
 
 export async function checkInRemoteReservation(rawCode: string, fallbackEventId?: string): Promise<CheckInResult> {
@@ -161,4 +258,10 @@ export function reservationFromRealtimePayload(payload: RealtimePostgresChangesP
   const row = payload.new as ReservationRow | null;
   if (!row?.id) return null;
   return reservationFromRow(row);
+}
+
+export function auditEventFromRealtimePayload(payload: RealtimePostgresChangesPayload<Record<string, unknown>>) {
+  const row = payload.new as ReservationAuditEventRow | null;
+  if (!row?.id) return null;
+  return auditEventFromRow(row);
 }

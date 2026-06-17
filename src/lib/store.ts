@@ -79,6 +79,32 @@ export type Reservation = {
   cancelledAt?: string;
 };
 
+export type ReservationAuditEventType =
+  | 'check_in_success'
+  | 'check_in_duplicate'
+  | 'check_in_cancelled'
+  | 'check_in_expired'
+  | 'check_in_invalid'
+  | 'reservation_cancelled'
+  | 'reservation_restored'
+  | 'check_in_reverted'
+  | 'spot_reassigned'
+  | 'owner_note';
+
+export type ReservationAuditEvent = {
+  id: string;
+  reservationId?: string;
+  eventId: string;
+  reservationCode: string;
+  type: ReservationAuditEventType;
+  reason?: string;
+  message: string;
+  actorRole?: Role;
+  actorId?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+};
+
 // -------- Mock events --------
 const events: EventItem[] = [
   {
@@ -638,9 +664,13 @@ type Store = {
   events: EventItem[];
   venueMap: VenueMapItem[];
   reservations: Reservation[];
+  auditEvents: ReservationAuditEvent[];
   addEvent: (e: EventItem) => void;
   setReservations: (reservations: Reservation[]) => void;
   upsertReservation: (reservation: Reservation) => void;
+  setAuditEvents: (events: ReservationAuditEvent[]) => void;
+  upsertAuditEvent: (event: ReservationAuditEvent) => void;
+  addLocalAuditEvent: (event: Omit<ReservationAuditEvent, 'id' | 'createdAt'>) => ReservationAuditEvent;
   addReservation: (r: Omit<Reservation, 'id' | 'code' | 'createdAt'>) => Reservation;
   markReserved: (itemId: string) => void;
   releaseItem: (itemId: string) => void;
@@ -661,6 +691,7 @@ export const useStore = create<Store>((set, get) => ({
   events,
   venueMap,
   reservations: seedReservations,
+  auditEvents: [],
   addEvent: (e) => set((s) => ({ events: [e, ...s.events] })),
   setReservations: (reservations) =>
     set((s) => ({
@@ -679,6 +710,29 @@ export const useStore = create<Store>((set, get) => ({
         venueMap: syncVenueMapFromReservations(venueMap, reservations, s.venueMap),
       };
     }),
+  setAuditEvents: (auditEvents) => set({ auditEvents }),
+  upsertAuditEvent: (event) =>
+    set((s) => {
+      const exists = s.auditEvents.some((e) => e.id === event.id);
+      const auditEvents = exists
+        ? s.auditEvents.map((e) => (e.id === event.id ? event : e))
+        : [event, ...s.auditEvents];
+
+      return {
+        auditEvents: auditEvents.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        ),
+      };
+    }),
+  addLocalAuditEvent: (event) => {
+    const auditEvent: ReservationAuditEvent = {
+      ...event,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+    };
+    get().upsertAuditEvent(auditEvent);
+    return auditEvent;
+  },
   addReservation: (r) => {
     const code = `SN-${String(get().reservations.length + 1).padStart(3, '0')}`;
     const newR: Reservation = {
@@ -707,6 +761,15 @@ export const useStore = create<Store>((set, get) => ({
         r.id === id ? { ...r, status: 'Cancelada', cancelledAt: new Date().toISOString() } : r,
       ),
     }));
+    get().addLocalAuditEvent({
+      reservationId: target.id,
+      eventId: target.eventId,
+      reservationCode: target.code,
+      type: 'reservation_cancelled',
+      reason: 'cancelled',
+      message: 'Reserva cancelada · cupo liberado',
+      actorRole: get().role,
+    });
     if (target.venueMapItemId) get().releaseItem(target.venueMapItemId);
   },
   isEventExpired: (eventId) => {
@@ -725,28 +788,48 @@ export const useStore = create<Store>((set, get) => ({
     const code = input.toUpperCase();
     const reservation = get().reservations.find((r) => r.code.toUpperCase() === code);
     if (!reservation) return { ok: false, message: 'Código inválido' };
-    if (reservation.status === 'Ingresó')
+    if (reservation.status === 'Ingresó') {
+      get().addLocalAuditEvent({
+        reservationId: reservation.id,
+        eventId: reservation.eventId,
+        reservationCode: reservation.code,
+        type: 'check_in_duplicate',
+        reason: 'duplicate',
+        message: 'Ingreso duplicado · QR ya utilizado',
+        actorRole: 'staff',
+      });
       return {
         ok: false,
         message: 'Ingreso duplicado · QR ya utilizado',
         reservation,
         duplicate: true,
       };
+    }
     if (reservation.status === 'Cancelada')
       return { ok: false, message: 'Reserva cancelada', reservation };
     if (get().isEventExpired(reservation.eventId))
       return { ok: false, message: 'Evento finalizado · QR expirado', reservation, expired: true };
+    const checkedInAt = new Date().toISOString();
     set((s) => ({
       reservations: s.reservations.map((r) =>
         r.id === reservation.id
-          ? { ...r, status: 'Ingresó', checkedInAt: new Date().toISOString() }
+          ? { ...r, status: 'Ingresó', checkedInAt }
           : r,
       ),
     }));
+    get().addLocalAuditEvent({
+      reservationId: reservation.id,
+      eventId: reservation.eventId,
+      reservationCode: reservation.code,
+      type: 'check_in_success',
+      reason: 'ok',
+      message: 'Ingreso registrado',
+      actorRole: 'staff',
+    });
     return {
       ok: true,
       message: 'Ingreso registrado',
-      reservation: { ...reservation, status: 'Ingresó', checkedInAt: new Date().toISOString() },
+      reservation: { ...reservation, status: 'Ingresó', checkedInAt },
     };
   },
 }));

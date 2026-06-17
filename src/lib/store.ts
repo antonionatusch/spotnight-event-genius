@@ -668,6 +668,8 @@ type Store = {
   addEvent: (e: EventItem) => void;
   setReservations: (reservations: Reservation[]) => void;
   upsertReservation: (reservation: Reservation) => void;
+  removeReservation: (id: string) => void;
+  clearReservationsForEvent: (eventId: string) => void;
   setAuditEvents: (events: ReservationAuditEvent[]) => void;
   upsertAuditEvent: (event: ReservationAuditEvent) => void;
   addLocalAuditEvent: (event: Omit<ReservationAuditEvent, 'id' | 'createdAt'>) => ReservationAuditEvent;
@@ -707,6 +709,26 @@ export const useStore = create<Store>((set, get) => ({
 
       return {
         reservations,
+        venueMap: syncVenueMapFromReservations(venueMap, reservations, s.venueMap),
+      };
+    }),
+  removeReservation: (id) =>
+    set((s) => {
+      const reservations = s.reservations.filter((r) => r.id !== id);
+
+      return {
+        reservations,
+        auditEvents: s.auditEvents.filter((event) => event.reservationId !== id),
+        venueMap: syncVenueMapFromReservations(venueMap, reservations, s.venueMap),
+      };
+    }),
+  clearReservationsForEvent: (eventId) =>
+    set((s) => {
+      const reservations = s.reservations.filter((r) => r.eventId !== eventId);
+
+      return {
+        reservations,
+        auditEvents: s.auditEvents.filter((event) => event.eventId !== eventId),
         venueMap: syncVenueMapFromReservations(venueMap, reservations, s.venueMap),
       };
     }),
@@ -854,6 +876,11 @@ function syncVenueMapFromReservations(
 
     const current = currentById.get(item.id);
     if (current?.status === 'selected') return { ...item, status: 'selected' };
+    if (isReservableMapItem(item)) return { ...item, status: 'available' };
     return item;
   });
+}
+
+function isReservableMapItem(item: VenueMapItem) {
+  return item.type === 'table' || item.type === 'seat' || item.type === 'booth';
 }

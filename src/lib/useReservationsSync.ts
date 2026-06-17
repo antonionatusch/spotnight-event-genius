@@ -12,6 +12,7 @@ import { useStore } from './store';
 export function useReservationsSync() {
   const setReservations = useStore((s) => s.setReservations);
   const upsertReservation = useStore((s) => s.upsertReservation);
+  const removeReservation = useStore((s) => s.removeReservation);
   const setAuditEvents = useStore((s) => s.setAuditEvents);
   const upsertAuditEvent = useStore((s) => s.upsertAuditEvent);
 
@@ -45,6 +46,12 @@ export function useReservationsSync() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'reservations' },
         (payload) => {
+          if (payload.eventType === 'DELETE') {
+            const deletedId = (payload.old as { id?: unknown } | null)?.id;
+            if (typeof deletedId === 'string') removeReservation(deletedId);
+            return;
+          }
+
           const reservation = reservationFromRealtimePayload(payload);
           if (reservation) upsertReservation(reservation);
         },
@@ -72,5 +79,5 @@ export function useReservationsSync() {
       void supabase.removeChannel(channel);
       void supabase.removeChannel(auditChannel);
     };
-  }, [setAuditEvents, setReservations, upsertAuditEvent, upsertReservation]);
+  }, [removeReservation, setAuditEvents, setReservations, upsertAuditEvent, upsertReservation]);
 }

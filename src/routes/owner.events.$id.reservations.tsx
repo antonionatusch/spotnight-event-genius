@@ -4,7 +4,7 @@ import { useStore, type Reservation } from "@/lib/store";
 import { AlertTriangle, ArrowLeft, History, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { cancelRemoteReservation } from "@/lib/reservations-api";
+import { cancelRemoteReservation, deleteEventReservationsForDebug } from "@/lib/reservations-api";
 
 export const Route = createFileRoute("/owner/events/$id/reservations")({
   component: EventReservations,
@@ -21,11 +21,14 @@ function EventReservations() {
   );
   const reservations = useMemo(() => allReservations.filter((r) => r.eventId === id), [allReservations, id]);
   const cancelReservation = useStore((s) => s.cancelReservation);
+  const clearReservationsForEvent = useStore((s) => s.clearReservationsForEvent);
   const upsertReservation = useStore((s) => s.upsertReservation);
   const [pending, setPending] = useState<Reservation | null>(null);
   const [historyReservation, setHistoryReservation] = useState<Reservation | null>(null);
   const [filter, setFilter] = useState<"all" | "confirmed" | "checked_in" | "cancelled" | "duplicates">("all");
   const [cancelling, setCancelling] = useState(false);
+  const [debugClearOpen, setDebugClearOpen] = useState(false);
+  const [debugClearing, setDebugClearing] = useState(false);
 
   if (!event) return <div className="p-6">Evento no encontrado</div>;
 
@@ -65,6 +68,23 @@ function EventReservations() {
     }
   };
 
+  const confirmDebugClear = async () => {
+    setDebugClearing(true);
+    try {
+      const deletedCount = await deleteEventReservationsForDebug(event.id);
+      clearReservationsForEvent(event.id);
+      setDebugClearOpen(false);
+      toast.success(`Reservas de prueba eliminadas: ${deletedCount}`);
+    } catch (error) {
+      console.error(error);
+      clearReservationsForEvent(event.id);
+      setDebugClearOpen(false);
+      toast.error("No se pudo borrar en Supabase; se limpió localmente para este test");
+    } finally {
+      setDebugClearing(false);
+    }
+  };
+
   return (
     <div className="px-4 py-4 space-y-4">
       <header className="flex items-center gap-3">
@@ -81,6 +101,22 @@ function EventReservations() {
         <div className="rounded-2xl border border-border bg-card p-3 text-center"><p className="text-2xl font-bold text-primary">{active.length}</p><p className="text-[10px] text-muted-foreground">Reservas</p></div>
         <div className="rounded-2xl border border-border bg-card p-3 text-center"><p className="text-2xl font-bold text-success">{checkedIn}</p><p className="text-[10px] text-muted-foreground">Ingresaron</p></div>
         <div className="rounded-2xl border border-border bg-card p-3 text-center"><p className="text-2xl font-bold text-gold">Bs.{revenue}</p><p className="text-[10px] text-muted-foreground">Ingreso</p></div>
+      </div>
+
+      <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-black tracking-widest text-destructive">MODO DESARROLLADOR</p>
+            <p className="text-xs text-muted-foreground">Elimina las reservas de este evento y libera mesas para testeo.</p>
+          </div>
+          <button
+            onClick={() => setDebugClearOpen(true)}
+            disabled={reservations.length === 0}
+            className="shrink-0 rounded-xl border border-destructive/50 bg-destructive/15 px-3 py-2 text-xs font-bold text-destructive disabled:opacity-40"
+          >
+            Limpiar reservas
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1">
@@ -186,6 +222,29 @@ function EventReservations() {
             ))}
             {historyEvents.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">Sin eventos de auditoría todavía</p>}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={debugClearOpen} onOpenChange={setDebugClearOpen}>
+        <DialogContent className="max-w-[92vw] rounded-2xl border-destructive/40 bg-card sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Limpiar reservas de prueba</DialogTitle>
+            <DialogDescription>
+              Se eliminarán {reservations.length} reservas de {event.name}. Las mesas y sillas quedarán disponibles para seguir testeando.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col gap-2 sm:flex-col">
+            <button
+              onClick={confirmDebugClear}
+              disabled={debugClearing}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-destructive py-3 text-sm font-bold text-white disabled:opacity-50"
+            >
+              <Trash2 className="h-4 w-4" /> {debugClearing ? "Limpiando..." : "Sí, eliminar reservas"}
+            </button>
+            <button onClick={() => setDebugClearOpen(false)} className="w-full rounded-xl border border-border bg-card py-3 text-sm font-semibold text-muted-foreground">
+              Volver
+            </button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

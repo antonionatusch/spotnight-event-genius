@@ -170,6 +170,30 @@ export async function createReservation(input: NewReservationInput) {
   return reservationFromRow(data as ReservationRow);
 }
 
+export async function deleteEventReservationsForDebug(eventId: string) {
+  const supabase = getSupabase();
+
+  try {
+    const { data, error } = await supabase.rpc('delete_event_reservations_for_debug', {
+      p_event_id: eventId,
+    });
+
+    if (error) throw error;
+    return typeof data === 'number' ? data : 0;
+  } catch (error) {
+    if (!shouldRetryDirectDeleteReservations(error)) throw error;
+
+    const { data, error: deleteError } = await supabase
+      .from('reservations')
+      .delete()
+      .eq('event_id', eventId)
+      .select('id');
+
+    if (deleteError) throw deleteError;
+    return data?.length ?? 0;
+  }
+}
+
 export async function cancelRemoteReservation(id: string, actorRole: ReservationAuditEvent['actorRole'] = 'owner') {
   const supabase = getSupabase();
   const { data, error } = await supabase
@@ -279,6 +303,17 @@ function shouldRetryLegacyCheckInRpc(error: unknown) {
     message.includes('Could not find the function') ||
     message.includes('p_actor_id') ||
     message.includes('p_actor_role')
+  );
+}
+
+function shouldRetryDirectDeleteReservations(error: unknown) {
+  const postgrestError = error as { code?: string; message?: string } | null;
+  const message = postgrestError?.message ?? (error instanceof Error ? error.message : '');
+
+  return (
+    postgrestError?.code === 'PGRST202' ||
+    message.includes('Could not find the function') ||
+    message.includes('delete_event_reservations_for_debug')
   );
 }
 

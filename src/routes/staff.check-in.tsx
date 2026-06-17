@@ -4,6 +4,7 @@ import { useStore } from "@/lib/store";
 import { Shield, Camera, Search, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { checkInRemoteReservation } from "@/lib/reservations-api";
+import { isSupabaseConfigured } from "@/lib/supabase";
 
 export const Route = createFileRoute("/staff/check-in")({
   component: CheckIn,
@@ -76,6 +77,12 @@ function CheckIn() {
       }
     } catch (error) {
       console.error(error);
+      if (isSupabaseConfigured) {
+        setResult({ ok: false, message: "No se pudo validar con Supabase" });
+        toast.error("No se pudo validar con Supabase; no se registró el ingreso", { id: "check-in-result" });
+        return;
+      }
+
       const r = localCheckIn(normalizedCode);
       setResult({ ok: r.ok, message: r.message, resCode: r.reservation?.code, duplicate: r.duplicate, expired: r.expired });
       if (r.ok) toast.success(`Ingreso local registrado: ${r.reservation?.code}`, { id: "check-in-result" });

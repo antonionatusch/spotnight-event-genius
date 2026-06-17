@@ -230,12 +230,28 @@ export async function checkInRemoteReservation(rawCode: string, fallbackEventId?
     return { ok: false, reason: 'invalid', message: 'El QR no incluye evento' };
   }
 
-  const { data, error } = await supabase.rpc('check_in_reservation', {
-    p_code: parsed.code,
-    p_event_id: eventId,
-  });
+  let data: unknown;
+  try {
+    const response = await supabase.rpc('check_in_reservation', {
+      p_code: parsed.code,
+      p_event_id: eventId,
+      p_actor_role: 'staff',
+      p_actor_id: null,
+    });
 
-  if (error) throw error;
+    if (response.error) throw response.error;
+    data = response.data;
+  } catch (error) {
+    if (!shouldRetryLegacyCheckInRpc(error)) throw error;
+
+    const response = await supabase.rpc('check_in_reservation', {
+      p_code: parsed.code,
+      p_event_id: eventId,
+    });
+
+    if (response.error) throw response.error;
+    data = response.data;
+  }
 
   const payload = data as {
     ok: boolean;
@@ -252,6 +268,18 @@ export async function checkInRemoteReservation(rawCode: string, fallbackEventId?
     duplicate: payload.reason === 'duplicate',
     expired: payload.reason === 'expired',
   };
+}
+
+function shouldRetryLegacyCheckInRpc(error: unknown) {
+  const postgrestError = error as { code?: string; message?: string } | null;
+  const message = postgrestError?.message ?? (error instanceof Error ? error.message : '');
+
+  return (
+    postgrestError?.code === 'PGRST202' ||
+    message.includes('Could not find the function') ||
+    message.includes('p_actor_id') ||
+    message.includes('p_actor_role')
+  );
 }
 
 export function reservationFromRealtimePayload(payload: RealtimePostgresChangesPayload<Record<string, unknown>>) {

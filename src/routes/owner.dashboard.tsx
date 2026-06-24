@@ -1,31 +1,64 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { AppHeader } from "@/components/AppHeader";
-import { useStore } from "@/lib/store";
-import { Plus, TrendingUp, Users, Ticket, DollarSign, Percent, Activity } from "lucide-react";
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { useEffect } from 'react';
+import { AppHeader } from '@/components/AppHeader';
+import { PasswordGate } from '@/components/PasswordGate';
+import { OWNER_DEMO_PASSWORD } from '@/lib/demo-access';
+import { useStore } from '@/lib/store';
+import { Plus, TrendingUp, Users, Ticket, DollarSign, Percent, Activity } from 'lucide-react';
 
-export const Route = createFileRoute("/owner/dashboard")({
+export const Route = createFileRoute('/owner/dashboard')({
   component: OwnerDashboard,
 });
 
 function OwnerDashboard() {
+  return (
+    <PasswordGate
+      storageKey="owner"
+      title="Panel propietario"
+      subtitle="Ingresá la clave para gestionar eventos, reservas y métricas del boliche."
+      password={OWNER_DEMO_PASSWORD}
+    >
+      <OwnerDashboardContent />
+    </PasswordGate>
+  );
+}
+
+function OwnerDashboardContent() {
+  const setRole = useStore((s) => s.setRole);
   const events = useStore((s) => s.events);
   const reservations = useStore((s) => s.reservations);
-  const active = reservations.filter((r) => r.status !== "Cancelada");
+
+  useEffect(() => {
+    setRole('owner');
+  }, [setRole]);
+
+  const active = reservations.filter((r) => r.status !== 'Cancelada');
   const confirmed = active.length;
-  const checkedIn = reservations.filter((r) => r.status === "Ingresó").length;
+  const checkedIn = reservations.filter((r) => r.status === 'Ingresó').length;
   const revenue = active.reduce((acc, r) => acc + r.totalAmount, 0);
   const commission = active.reduce((acc, r) => acc + r.spotNightCommission, 0);
-  const capacity = events.reduce((a, e) => a + e.ticketTypes.reduce((b, t) => b + t.capacity, 0), 0);
-  const available = events.reduce((a, e) => a + e.ticketTypes.reduce((b, t) => b + t.available, 0), 0);
+  const capacity = events.reduce(
+    (a, e) => a + e.ticketTypes.reduce((b, t) => b + t.capacity, 0),
+    0,
+  );
+  const available = events.reduce(
+    (a, e) => a + e.ticketTypes.reduce((b, t) => b + t.available, 0),
+    0,
+  );
   const occupancy = Math.round(((capacity - available) / capacity) * 100);
 
   const metrics = [
-    { label: "Eventos activos", value: events.filter((e) => e.status === "active").length, icon: Activity, color: "text-primary" },
-    { label: "Reservas", value: confirmed, icon: Ticket, color: "text-magenta" },
-    { label: "Ingresos validados", value: checkedIn, icon: Users, color: "text-success" },
-    { label: "Cupos disponibles", value: available, icon: TrendingUp, color: "text-neon" },
-    { label: "Ocupación", value: occupancy + "%", icon: Percent, color: "text-gold" },
-    { label: "Ingreso est.", value: "Bs. " + revenue, icon: DollarSign, color: "text-success" },
+    {
+      label: 'Eventos activos',
+      value: events.filter((e) => e.status === 'active').length,
+      icon: Activity,
+      color: 'text-primary',
+    },
+    { label: 'Reservas', value: confirmed, icon: Ticket, color: 'text-magenta' },
+    { label: 'Ingresos validados', value: checkedIn, icon: Users, color: 'text-success' },
+    { label: 'Cupos disponibles', value: available, icon: TrendingUp, color: 'text-neon' },
+    { label: 'Ocupación', value: occupancy + '%', icon: Percent, color: 'text-gold' },
+    { label: 'Ingreso est.', value: 'Bs. ' + revenue, icon: DollarSign, color: 'text-success' },
   ];
 
   return (
@@ -55,7 +88,10 @@ function OwnerDashboard() {
 
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold tracking-widest text-muted-foreground">EVENTOS</h2>
-          <Link to="/owner/events/new" className="flex items-center gap-1.5 rounded-full gradient-primary px-3 py-1.5 text-xs font-bold text-white glow-primary">
+          <Link
+            to="/owner/events/new"
+            className="flex items-center gap-1.5 rounded-full gradient-primary px-3 py-1.5 text-xs font-bold text-white glow-primary"
+          >
             <Plus className="h-3 w-3" /> Crear evento
           </Link>
         </div>
@@ -66,14 +102,18 @@ function OwnerDashboard() {
               key={e.id}
               to="/owner/events/$id/reservations"
               params={{ id: e.id }}
-              className={`flex items-center gap-3 p-3 ${i > 0 ? "border-t border-border" : ""}`}
+              className={`flex items-center gap-3 p-3 ${i > 0 ? 'border-t border-border' : ''}`}
             >
               <img src={e.imageUrl} alt="" className="h-12 w-12 rounded-xl object-cover" />
               <div className="flex-1 min-w-0">
                 <p className="font-bold truncate">{e.name}</p>
-                <p className="text-xs text-muted-foreground">{e.date} · {e.venueName}</p>
+                <p className="text-xs text-muted-foreground">
+                  {e.date} · {e.venueName}
+                </p>
               </div>
-              <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-bold text-success">{e.status}</span>
+              <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-bold text-success">
+                {e.status}
+              </span>
             </Link>
           ))}
         </div>

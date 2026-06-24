@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import tutiImageUrl from '../../assets/tuti.jpg';
+import { getReservationCancellationMessage } from './cancellation-messages';
 
 export type Role = 'user' | 'owner' | 'staff';
 export type Floor = 'planta_baja' | 'planta_alta';
@@ -678,7 +679,7 @@ type Store = {
   addReservation: (r: Omit<Reservation, 'id' | 'code' | 'createdAt'>) => Reservation;
   markReserved: (itemId: string) => void;
   releaseItem: (itemId: string) => void;
-  cancelReservation: (id: string) => void;
+  cancelReservation: (id: string, actorRole?: Role) => void;
   isEventExpired: (eventId: string) => boolean;
   checkIn: (code: string) => {
     ok: boolean;
@@ -777,9 +778,10 @@ export const useStore = create<Store>((set, get) => ({
     set((s) => ({
       venueMap: s.venueMap.map((i) => (i.id === itemId ? { ...i, status: 'available' } : i)),
     })),
-  cancelReservation: (id) => {
+  cancelReservation: (id, actorRole) => {
     const target = get().reservations.find((r) => r.id === id);
     if (!target || target.status === 'Cancelada') return;
+    const cancellationActor = actorRole ?? get().role;
     set((s) => ({
       reservations: s.reservations.map((r) =>
         r.id === id ? { ...r, status: 'Cancelada', cancelledAt: new Date().toISOString() } : r,
@@ -791,8 +793,8 @@ export const useStore = create<Store>((set, get) => ({
       reservationCode: target.code,
       type: 'reservation_cancelled',
       reason: 'cancelled',
-      message: 'Reserva cancelada · cupo liberado',
-      actorRole: get().role,
+      message: getReservationCancellationMessage(cancellationActor),
+      actorRole: cancellationActor,
     });
     if (target.venueMapItemId) get().releaseItem(target.venueMapItemId);
   },
@@ -860,7 +862,7 @@ function syncVenueMapFromReservations(
   baseMap: VenueMapItem[],
   reservations: Reservation[],
   currentMap: VenueMapItem[],
-) {
+): VenueMapItem[] {
   const currentById = new Map(currentMap.map((i) => [i.id, i]));
   const statusByItem = new Map<string, SeatStatus>();
 

@@ -1,4 +1,5 @@
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import { getReservationCancellationMessage } from './cancellation-messages';
 import { getSupabase } from './supabase';
 import type { Reservation, ReservationAuditEvent } from './store';
 
@@ -194,7 +195,10 @@ export async function deleteEventReservationsForDebug(eventId: string) {
   }
 }
 
-export async function cancelRemoteReservation(id: string, actorRole: ReservationAuditEvent['actorRole'] = 'owner') {
+export async function cancelRemoteReservation(
+  id: string,
+  actorRole: ReservationAuditEvent['actorRole'] = 'owner',
+) {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from('reservations')
@@ -213,7 +217,7 @@ export async function cancelRemoteReservation(id: string, actorRole: Reservation
       reservationCode: reservation.code,
       type: 'reservation_cancelled',
       reason: 'cancelled',
-      message: 'Reserva cancelada · cupo liberado',
+      message: getReservationCancellationMessage(actorRole),
       actorRole,
     });
   } catch (error) {
@@ -223,7 +227,9 @@ export async function cancelRemoteReservation(id: string, actorRole: Reservation
   return reservation;
 }
 
-export async function createReservationAuditEvent(input: Omit<ReservationAuditEvent, 'id' | 'createdAt'>) {
+export async function createReservationAuditEvent(
+  input: Omit<ReservationAuditEvent, 'id' | 'createdAt'>,
+) {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from('reservation_audit_events')
@@ -245,7 +251,10 @@ export async function createReservationAuditEvent(input: Omit<ReservationAuditEv
   return auditEventFromRow(data as ReservationAuditEventRow);
 }
 
-export async function checkInRemoteReservation(rawCode: string, fallbackEventId?: string): Promise<CheckInResult> {
+export async function checkInRemoteReservation(
+  rawCode: string,
+  fallbackEventId?: string,
+): Promise<CheckInResult> {
   const supabase = getSupabase();
   const parsed = parseQrPayload(rawCode);
   const eventId = parsed.eventId ?? fallbackEventId;
@@ -317,13 +326,17 @@ function shouldRetryDirectDeleteReservations(error: unknown) {
   );
 }
 
-export function reservationFromRealtimePayload(payload: RealtimePostgresChangesPayload<Record<string, unknown>>) {
+export function reservationFromRealtimePayload(
+  payload: RealtimePostgresChangesPayload<Record<string, unknown>>,
+) {
   const row = payload.new as ReservationRow | null;
   if (!row?.id) return null;
   return reservationFromRow(row);
 }
 
-export function auditEventFromRealtimePayload(payload: RealtimePostgresChangesPayload<Record<string, unknown>>) {
+export function auditEventFromRealtimePayload(
+  payload: RealtimePostgresChangesPayload<Record<string, unknown>>,
+) {
   const row = payload.new as ReservationAuditEventRow | null;
   if (!row?.id) return null;
   return auditEventFromRow(row);

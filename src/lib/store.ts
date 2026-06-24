@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import tutiImageUrl from '../../assets/tuti.jpg';
 
 export type Role = 'user' | 'owner' | 'staff';
 export type Floor = 'planta_baja' | 'planta_alta';
@@ -118,8 +119,7 @@ const events: EventItem[] = [
     location: 'Equipetrol',
     description:
       'Una noche única con los mejores DJs de la escena. Ambiente exclusivo, cócteles premium y la pista más encendida de la ciudad. Reservá tu lugar antes de llegar.',
-    imageUrl:
-      'https://p19-common-sign.tiktokcdn.com/tos-maliva-avt-0068/9a75a4046bc77ac0b34c46007886793d~tplv-tiktokx-cropcenter:1080:1080.jpeg?dr=14579&refresh_token=e0e6caa0&x-expires=1781888400&x-signature=RA7dy5SWS%2F2ju5ZGKBeUVin%2BEgQ%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=my2',
+    imageUrl: tutiImageUrl,
     status: 'active',
     isFeatured: true,
     hot: true,
@@ -672,7 +672,9 @@ type Store = {
   clearReservationsForEvent: (eventId: string) => void;
   setAuditEvents: (events: ReservationAuditEvent[]) => void;
   upsertAuditEvent: (event: ReservationAuditEvent) => void;
-  addLocalAuditEvent: (event: Omit<ReservationAuditEvent, 'id' | 'createdAt'>) => ReservationAuditEvent;
+  addLocalAuditEvent: (
+    event: Omit<ReservationAuditEvent, 'id' | 'createdAt'>,
+  ) => ReservationAuditEvent;
   addReservation: (r: Omit<Reservation, 'id' | 'code' | 'createdAt'>) => Reservation;
   markReserved: (itemId: string) => void;
   releaseItem: (itemId: string) => void;
@@ -834,9 +836,7 @@ export const useStore = create<Store>((set, get) => ({
     const checkedInAt = new Date().toISOString();
     set((s) => ({
       reservations: s.reservations.map((r) =>
-        r.id === reservation.id
-          ? { ...r, status: 'Ingresó', checkedInAt }
-          : r,
+        r.id === reservation.id ? { ...r, status: 'Ingresó', checkedInAt } : r,
       ),
     }));
     get().addLocalAuditEvent({
@@ -867,7 +867,10 @@ function syncVenueMapFromReservations(
   for (const reservation of reservations) {
     if (!reservation.venueMapItemId) continue;
     if (reservation.status === 'Cancelada') continue;
-    statusByItem.set(reservation.venueMapItemId, reservation.status === 'Ingresó' ? 'occupied' : 'reserved');
+    statusByItem.set(
+      reservation.venueMapItemId,
+      reservation.status === 'Ingresó' ? 'occupied' : 'reserved',
+    );
   }
 
   return baseMap.map((item) => {

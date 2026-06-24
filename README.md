@@ -37,6 +37,10 @@ El MVP está pensado para demostrar valor de negocio ante docentes, usuarios pil
 
 Estas contraseñas son solo para la demo académica. No representan un sistema de autenticación productivo.
 
+## Video demostrativo
+
+Se puede encontrar en [Google Drive.](https://drive.google.com/file/d/1aMSLxXmieE5mJYCS73MbYygwCu48zHrV/view?usp=sharing)
+
 ## Flujos Principales
 
 1. Home: el usuario entra a `/` y revisa eventos disponibles.

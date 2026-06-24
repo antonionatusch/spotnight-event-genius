@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { LockKeyhole } from 'lucide-react';
 
+const unlockedDemoAccess = new Set<string>();
+
 type PasswordGateProps = {
   storageKey: string;
   title: string;
@@ -16,14 +18,13 @@ export function PasswordGate({
   password,
   children,
 }: PasswordGateProps) {
-  const sessionKey = `spotnight-demo-access:${storageKey}`;
   const [unlocked, setUnlocked] = useState(false);
   const [value, setValue] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
-    setUnlocked(sessionStorage.getItem(sessionKey) === 'unlocked');
-  }, [sessionKey]);
+    setUnlocked(unlockedDemoAccess.has(storageKey));
+  }, [storageKey]);
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -32,7 +33,7 @@ export function PasswordGate({
       return;
     }
 
-    sessionStorage.setItem(sessionKey, 'unlocked');
+    unlockedDemoAccess.add(storageKey);
     setError('');
     setUnlocked(true);
   };
